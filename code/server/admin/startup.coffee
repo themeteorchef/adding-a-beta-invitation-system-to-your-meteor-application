@@ -8,7 +8,8 @@
 
 # Create an array of user accounts.
 users = [
-  { name: "Admin", email: "admin@admin.com", password: "password" }
+  { name: "Admin", email: "admin@admin.com", password: "password", roles: ['admin'] },
+  { name: "Beatrix Beta", email: "beatrix@beta.com", password: "password", roles: ['tester'] }
 ]
 
 # Loop through array of user accounts.
@@ -27,3 +28,5 @@ for user in users
         name: user.name
     )
 
+    if user.roles.length > 0
+      Roles.addUsersToRoles(id, user.roles)

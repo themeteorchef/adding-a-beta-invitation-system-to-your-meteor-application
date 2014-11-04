@@ -1,3 +1,11 @@
+Router.route('index',
+  path: '/'
+  template: 'index'
+  onBeforeAction: ->
+    Session.set 'currentRoute', 'index'
+    @next()
+)
+
 Router.route('signup',
   path: '/signup'
   template: 'signup'

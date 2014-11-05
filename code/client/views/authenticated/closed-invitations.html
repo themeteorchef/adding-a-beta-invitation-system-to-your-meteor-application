@@ -1,4 +1,5 @@
 <template name="closedInvitations">
+  {{#if hasInvites}}
   <table class="table">
     <thead>
       <tr>
@@ -9,18 +10,23 @@
       </tr>
     </thead>
     <tbody>
+      {{#each invites}}
       <tr>
         <td>{{email}}</td>
-        <td class="text-center">{{epochToString invitedDate}}</td>
-        <td class="text-center">{{token.short}}</td>
+        <td class="text-center">{{epochToString dateInvited}}</td>
+        <td class="text-center">{{token.public}}</td>
         <td class="text-center">
-        {{#if created}}
+        {{#if accountCreated}}
           Yes
         {{else}}
           No
         {{/if}}
         </td>
       </tr>
+      {{/each}}
     </tbody>
   </table>
+  {{else}}
+    <p class="alert alert-warning">You haven't sent any invites yet.</p>
+  {{/if}}
 </template>

@@ -11,3 +11,10 @@
 UI.registerHelper('currentRoute', (route) ->
   if Session.equals 'currentRoute', route then 'active' else ''
 )
+
+# Epoch to String
+# Return a formatted date string for a given unix/epoch timestamp.
+
+UI.registerHelper('epochToString', (timestamp) ->
+  # Convert epoch to string here.
+)

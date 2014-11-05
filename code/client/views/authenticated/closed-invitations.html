@@ -1,0 +1,26 @@
+<template name="closedInvitations">
+  <table class="table">
+    <thead>
+      <tr>
+        <th width="40%">Email Address</th>
+        <th width="20%" class="text-center">Date Invited</th>
+        <th width="20%" class="text-center">Invite Token</th>
+        <th width="20%" class="text-center">Account Created?</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{email}}</td>
+        <td class="text-center">{{epochToString invitedDate}}</td>
+        <td class="text-center">{{token.short}}</td>
+        <td class="text-center">
+        {{#if created}}
+          Yes
+        {{else}}
+          No
+        {{/if}}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</template>

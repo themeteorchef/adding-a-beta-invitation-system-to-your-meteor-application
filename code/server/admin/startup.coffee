@@ -8,7 +8,7 @@
 
 # Create an array of user accounts.
 users = [
-  { name: "Admin", email: "admin@admin.com", password: "password", roles: ['admin'] },
+  { name: "Andy Admin", email: "admin@admin.com", password: "password", roles: ['admin'] },
   { name: "Beatrix Beta", email: "beatrix@beta.com", password: "password", roles: ['tester'] }
 ]
 

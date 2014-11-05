@@ -16,5 +16,5 @@ UI.registerHelper('currentRoute', (route) ->
 # Return a formatted date string for a given unix/epoch timestamp.
 
 UI.registerHelper('epochToString', (timestamp) ->
-  # Convert epoch to string here.
+  moment.unix(timestamp / 1000).format("MMMM Do, YYYY")
 )

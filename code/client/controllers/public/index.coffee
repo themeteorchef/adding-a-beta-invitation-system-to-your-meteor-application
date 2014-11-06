@@ -19,6 +19,8 @@ Template.index.rendered = ->
       # to find the input, we'll use a call to jQuery.
       invitee =
         email: $('[name="emailAddress"]').val()
+        invited: false
+        requested: ( new Date() ).getTime()
 
       # Call the addToInvitesList method on the server.
       Meteor.call 'addToInvitesList', invitee, (error,response) ->

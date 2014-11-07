@@ -12,7 +12,10 @@ Template.openInvitations.helpers(
 Template.openInvitations.events(
 
   'click .send-invite': ->
-    invitee = this._id
+    invitee =
+      id: this._id
+      email: this.email
+
     confirmInvite = confirm "Are you sure you want to invite #{this.email}?"
 
     if confirmInvite
@@ -20,5 +23,5 @@ Template.openInvitations.events(
         if error
           console.log error
         else
-          alert "Invite sent to #{this.email}!"
+          alert "Invite sent to #{invitee.email}!"
 )

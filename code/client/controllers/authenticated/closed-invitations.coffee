@@ -5,6 +5,6 @@ Template.closedInvitations.helpers(
     if getInvites.length > 0 then true else false
 
   invites: ->
-    Invites.find({invited: true}, {sort: {dateInvited: -1}},{fields: {"_id": 1, "email": 1, "token": 1, "dateInvited": 1, "invited": 1, "accountCreated": 1}})
+    Invites.find({invited: true}, {sort: {dateInvited: -1}},{fields: {"_id": 1, "inviteNumber": 1, "email": 1, "token": 1, "dateInvited": 1, "invited": 1, "accountCreated": 1}})
 
 )

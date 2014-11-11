@@ -3,7 +3,8 @@
     <table class="table">
       <thead>
         <tr>
-          <th width="60%">Email Address</th>
+          <th width="5%"></th>
+          <th width="53%">Email Address</th>
           <th width="20%" class="text-center">Date Requested</th>
           <th width="20%" class="text-center">Send Invitation</th>
         </tr>
@@ -11,6 +12,7 @@
       <tbody>
         {{#each invites}}
         <tr>
+          <td># {{inviteNumber}}</td>
           <td>{{email}}</td>
           <td class="text-center">{{epochToString requested}}</td>
           <td class="text-center"><button type="button" class="btn btn-success send-invite">Invite</button></td>

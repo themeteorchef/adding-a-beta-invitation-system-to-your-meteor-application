@@ -12,10 +12,10 @@
       <tbody>
         {{#each invites}}
         <tr>
-          <td># {{inviteNumber}}</td>
-          <td>{{email}}</td>
-          <td class="text-center">{{epochToString requested}}</td>
-          <td class="text-center"><button type="button" class="btn btn-success send-invite">Invite</button></td>
+          <td class="vertical-align"># {{inviteNumber}}</td>
+          <td class="vertical-align">{{email}}</td>
+          <td class="text-center vertical-align">{{epochToString requested}}</td>
+          <td class="text-center vertical-align"><button type="button" class="btn btn-success send-invite">Invite</button></td>
         </tr>
         {{/each}}
       </tbody>

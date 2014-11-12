@@ -12,5 +12,5 @@ Template.signupCount.helpers(
     switch
       when inviteTotal == 1 then "1 person has already signed up!"
       when inviteTotal > 1 then "#{inviteTotal} people have already signed up!"
-      else "Nobody has signed up yet!"
+      else false
 )

@@ -12,10 +12,10 @@
     <tbody>
       {{#each invites}}
       <tr>
-        <td>{{email}}</td>
-        <td class="text-center">{{epochToString dateInvited}}</td>
-        <td class="text-center">{{token}}</td>
-        <td class="text-center">
+        <td class="vertical-align">{{email}}</td>
+        <td class="text-center vertical-align">{{epochToString dateInvited}}</td>
+        <td class="text-center vertical-align">{{token}}</td>
+        <td class="text-center vertical-align">
         {{#if accountCreated}}
           Yes
         {{else}}

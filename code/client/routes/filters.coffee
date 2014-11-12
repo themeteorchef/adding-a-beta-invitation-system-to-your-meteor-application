@@ -48,13 +48,16 @@ userAuthenticatedAdmin = ->
 Router.onBeforeAction checkUserLoggedIn, except: [
   'index',
   'signup',
+  'signup/:token',
   'login',
   'recover-password',
   'reset-password'
 ]
 
 Router.onBeforeAction userAuthenticatedBetaTester, only: [
+  'index',
   'signup',
+  'signup/:token',
   'login',
   'recover-password',
   'reset-password',
@@ -62,7 +65,9 @@ Router.onBeforeAction userAuthenticatedBetaTester, only: [
 ]
 
 Router.onBeforeAction userAuthenticatedAdmin, only: [
+  'index',
   'signup',
+  'signup/:token',
   'login',
   'recover-password',
   'reset-password'

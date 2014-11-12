@@ -12,8 +12,8 @@ Meteor.methods(
     # Generate a token here so we can use it with our email, too.
     token = Random.hexString(10)
 
-    # Perform the insert into our DB.
-    Invites.upsert(invitee,
+    # Update our user.
+    Invites.update(invitee.id,
       $set:
         token: token
         dateInvited: ( new Date() ).getTime()
@@ -26,8 +26,8 @@ Meteor.methods(
         # If no errors, send the user an email with their invitation.
         Email.send(
           to: invitee.email
-          from: "Widgetly Beta Invitation <beta@widgetly.com>"
-          subject: "Welcome to the Widgetly Beta!"
+          from: "Urkelforce Beta Invitation <dididothat@urkelforce.com>"
+          subject: "Welcome to the Urkelforce Beta!"
           html: Handlebars.templates['send-invite'](
             token: token
           )

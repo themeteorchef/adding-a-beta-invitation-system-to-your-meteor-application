@@ -11,6 +11,20 @@ Router.route('signup',
   template: 'signup'
   onBeforeAction: ->
     Session.set 'currentRoute', 'signup'
+    # Clear out the beta token on the /signup route without a token parameter
+    # so if we switch from /signup/:token, the token doesn't copy over.
+    Session.set 'betaToken', ''
+    @next()
+)
+
+Router.route('signup/:token',
+  path: '/signup/:token'
+  template: 'signup'
+  onBeforeAction: ->
+    Session.set 'currentRoute', 'signup'
+    # Tell Iron Router to look at our :token parameter and assign it to a
+    # session variable so that we can access it in our template.
+    Session.set 'betaToken', @params.token
     @next()
 )
 

@@ -12,14 +12,19 @@ Template.openInvitations.helpers(
 Template.openInvitations.events(
 
   'click .send-invite': ->
+    # Define our invitee's data.
     invitee =
       id: this._id
       email: this.email
 
+    # Grab the current URL the request is being made from to use in our email.
+    url = window.location.origin + "/signup"
+
+    # Make sure we want to do this before moving forward.
     confirmInvite = confirm "Are you sure you want to invite #{this.email}?"
 
     if confirmInvite
-      Meteor.call 'sendInvite', invitee, (error)->
+      Meteor.call 'sendInvite', invitee, url, (error)->
         if error
           console.log error
         else

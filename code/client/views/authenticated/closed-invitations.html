@@ -14,7 +14,7 @@
       <tr>
         <td class="vertical-align">{{email}}</td>
         <td class="text-center vertical-align">{{epochToString dateInvited}}</td>
-        <td class="text-center vertical-align">{{token}}</td>
+        <td class="text-center vertical-align">{{#if token}}{{token}}{{else}}Already Used{{/if}}</td>
         <td class="text-center vertical-align">
         {{#if accountCreated}}
           Yes

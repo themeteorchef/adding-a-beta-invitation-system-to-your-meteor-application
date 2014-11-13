@@ -5,9 +5,10 @@
 
 Meteor.methods(
 
-  sendInvite: (invitee) ->
-    # Check the invitee argument against our expected pattern.
+  sendInvite: (invitee,url) ->
+    # Check the invitee and url arguments against our expected patterns.
     check(invitee,{id: String, email: String})
+    check(url,String)
 
     # Generate a token here so we can use it with our email, too.
     token = Random.hexString(10)
@@ -30,6 +31,8 @@ Meteor.methods(
           subject: "Welcome to the Urkelforce Beta!"
           html: Handlebars.templates['send-invite'](
             token: token
+            url: url
+            urlWithToken: url + "/#{token}"
           )
         )
     )

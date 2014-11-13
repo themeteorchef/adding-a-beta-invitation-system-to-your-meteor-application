@@ -24,16 +24,25 @@ Meteor.methods(
       if error
         console.log error
       else
+        # Use Server Side Rendering to compile our email template and pass it
+        # the data we'll need to share with our user. First we compile our
+        # template using the .compileTemplate() method, passing the text of our
+        # email template located in our /private/email directory.
+        SSR.compileTemplate('sendInvite', Assets.getText('email/send-invite.html'))
+
+        # Next, we render and assign data to our compiled template.
+        emailTemplate = SSR.render('sendInvite',
+          token: token
+          url: url
+          urlWithToken: url + "/#{token}"
+        )
+
         # If no errors, send the user an email with their invitation.
         Email.send(
           to: invitee.email
           from: "Urkelforce Beta Invitation <dididothat@urkelforce.com>"
           subject: "Welcome to the Urkelforce Beta!"
-          html: Handlebars.templates['send-invite'](
-            token: token
-            url: url
-            urlWithToken: url + "/#{token}"
-          )
+          html: emailTemplate
         )
     )
 )

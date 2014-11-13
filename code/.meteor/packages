@@ -18,6 +18,5 @@ particle4dev:sass@0.3.0
 alanning:roles
 mrt:moment
 random
-cmather:handlebars-server
 email
-
+meteorhacks:ssr

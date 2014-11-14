@@ -1,3 +1,8 @@
+<div class="note">
+<h3>A quick note</h3>
+<p>The demo for this recipe is currently offline. There was an issue deploying to meteor.com in conjunction with the meteorhacks:ssr package used in this recipe. The recipe <em>does</em> work locally, however, so for the moment you will need to <a href="https://github.com/themeteorchef/adding-a-beta-invitation-system-to-your-meteor-application">clone a copy from GitHub</a> and run a server locally. Sorry for the inconvenience! Make sure to follow <a href="http://twitter.com/themeteorchef">@themeteorchef on Twitter</a> for updates.</p>
+</div>
+
 ### Getting Started
 
 This recipe relies on a handful of packages to give us some extra functionality that we'll use to issue beta invites to our users. Before we jump in, let's get each installed and take a look at what functionality they'll give us access to.

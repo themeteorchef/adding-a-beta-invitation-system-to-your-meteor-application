@@ -18,6 +18,7 @@ Meteor.startup(->
 
   # Create an array of user accounts.
   users = [
+    { name: "Steve Urkel", email: "steve@urkel.com", password: "dididothat", roles: ['admin'] },
     { name: "Andy Admin", email: "admin@admin.com", password: "password", roles: ['admin'] },
     { name: "Beatrix Beta", email: "beatrix@beta.com", password: "password", roles: ['tester'] }
   ]

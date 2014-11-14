@@ -15,9 +15,9 @@ Meteor.methods(
     # passing our invitee's email so that we can check the value without case
     # sensitivity (i.e. both TeSt@teSt.com and test@test.com will match).
     newInvitee  = new RegExp("^#{invitee.email}$",'i')
-    emailExists = Invites.find({"email": newInvitee}).count()
+    emailExists = Invites.findOne({"email": newInvitee})
 
-    if emailExists > 0
+    if emailExists
       throw new Meteor.Error "email-exists", "It looks like you've already signed up for our beta. Thanks!"
     else
       # Enumerate the invite so we know what order it came in. This ties back to

@@ -11,10 +11,8 @@ Meteor.methods(
 
     # Validate that the email we're passing does not already exist. We're doing
     # this on the server to guarantee that we're not doing any double inserts.
-    # If we find the email does exist, throw an error. Here, we convert the
-    # passed email to lowercase to avoid testing against mixed case values.
-    invitee.email = invitee.email.toLowerCase()
-    emailExists   = Invites.findOne({"email": invitee.email})
+    # If we find the email does exist, throw an error.
+    emailExists = Invites.findOne({"email": invitee.email})
 
     if emailExists
       throw new Meteor.Error "email-exists", "It looks like you've already signed up for our beta. Thanks!"

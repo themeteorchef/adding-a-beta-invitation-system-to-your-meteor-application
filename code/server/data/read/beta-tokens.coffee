@@ -11,10 +11,7 @@ Meteor.methods(
     # as individual variables as opposed to a single object or array.
     check(user,{email: String, password: String, betaToken: String})
 
-    # Attempt to find a user with a matching email and token. Note: here, we
-    # convert the passed email to lowercase to avoid testing against mixed 
-    # case values.
-    user.email = user.email.toLowerCase()
+    # Attempt to find a user with a matching email and token.
     testInvite = Invites.findOne({email: user.email, token: user.betaToken}, {fields: {"_id": 1, "email": 1, "token": 1}})
 
     # If the email and token do not match, throw an error. If the email and

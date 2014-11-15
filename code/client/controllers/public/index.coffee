@@ -18,7 +18,7 @@ Template.index.rendered = ->
       # in our validation's submitHandler, instead of calling on the template
       # to find the input, we'll use a call to jQuery.
       invitee =
-        email: $('[name="emailAddress"]').val()
+        email: $('[name="emailAddress"]').val().toLowerCase()
         invited: false
         requested: ( new Date() ).getTime()
 

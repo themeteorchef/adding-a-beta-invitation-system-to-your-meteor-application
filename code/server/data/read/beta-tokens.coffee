@@ -11,13 +11,11 @@ Meteor.methods(
     # as individual variables as opposed to a single object or array.
     check(user,{email: String, password: String, betaToken: String})
 
-    # Attempt to find a user with a matching email and token. Note: here we
-    # create a regExp on the email to ensure that our search can find it in the
-    # database no matter its formatting (e.g. test@test.com vs TeSt@teST.com).
-    # We do not need to create a regExp for our token because we expect an
-    # exact match.
-    emailRegex = new RegExp("^#{user.email}$",'i')
-    testInvite = Invites.findOne({email: emailRegex, token: user.betaToken}, {fields: {"_id": 1, "email": 1, "token": 1}})
+    # Attempt to find a user with a matching email and token. Note: here, we
+    # convert the passed email to lowercase to avoid testing against mixed 
+    # case values.
+    user.email = user.email.toLowerCase()
+    testInvite = Invites.findOne({email: user.email, token: user.betaToken}, {fields: {"_id": 1, "email": 1, "token": 1}})
 
     # If the email and token do not match, throw an error. If the email and
     # token do match, invalidate the token by deleting it and return true. We

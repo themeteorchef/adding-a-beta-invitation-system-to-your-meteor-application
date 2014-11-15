@@ -273,7 +273,7 @@ Finally, we set a callback function in the `submitHandler` setting where we’ll
 <p class="block-header">/client/controllers/public/index.coffee</p>
 ```.lang-coffeescript
 invitee =
-  email: $('[name="emailAddress"]').val()
+  email: $('[name="emailAddress"]').val().toLowerCase()
   invited: false
   requested: ( new Date() ).getTime()
 
@@ -284,7 +284,7 @@ invitee =
       alert "Invite requested. We'll be in touch soon. Thanks for your interest in Urkelforce!"
 ```
 
-This is pretty straightforward. We’re using jQuery to get the value our user has passed to the `[name=“emailAddress”]` field and then setting two additional values `invited: false` and `requested: ( new Date() ).getTime()`. The `invited: false` key/value is saying that our user has _not_ been invited yet. We’re going to make use of this later on to determine which list our invite should show up on.
+This is pretty straightforward. We’re using jQuery to get the value our user has passed to the `[name=“emailAddress”]` field (converting the value to lowercase to prevent getting a mixed case value from the user) and then setting two additional values `invited: false` and `requested: ( new Date() ).getTime()`. The `invited: false` key/value is saying that our user has _not_ been invited yet. We’re going to make use of this later on to determine which list our invite should show up on.
 
 Finally, to make things easier on admin’s, we pass a unix timestamp for the current time (when the form is actually submitted) using the `( new Date() ).getTime()` method.
 
@@ -303,7 +303,6 @@ Meteor.methods(
   addToInvitesList: (invitee) ->
     check(invitee, {email: String, requested: Number, invited: Boolean})
 
-    newInvitee  = new RegExp("^#{invitee.email}$",'i')
     emailExists = Invites.findOne({“email": newInvitee})
 
     if emailExists
@@ -320,9 +319,7 @@ Meteor.methods(
 
 First, we make sure to make use of the [Meteor Check package](http://docs.meteor.com/#/full/check_package) to ensure that the data we’re getting from the client is what we actually want. Recall we did this in [Recipe # 1: Exporting Data From Your Meteor Application](http://themeteorchef.com/recipes/exporting-data-from-your-meteor-application/).
 
-Next, we’re creating a `RegExp` or regular expression object that’s set to look for the email our user has passed with case insensitivity. Said another way, this will allow us to search for the email in our database no matter the format (e.g. test@test.com will also match as tESt@tEST.cOM).
-
-Now we take our `RegExp` object and pass it to a `findOne` call on our `Invites` collection. Setting this to a variable `emailExists`, we use it in an if/else statement that throws an error that will be sent back to the client if the email is found, and if not (it’s unique), insert the user into the database.
+Now we take our `invitee.email` value and pass it to a `findOne` call on our `Invites` collection. Setting this to a variable `emailExists`, we use it in an if/else statement that throws an error that will be sent back to the client if the email is found, and if not (it’s unique), insert the user into the database.
 
 Notice that we’ve added two lines of code for checking how many users currently exist in our beta and then incrementing that number by one, adding it to the invite before insert it into the database. This is entirely optional, but a nice way to identify the order in which invites have come in (e.g. if you want to invite older requests first).
 
@@ -546,7 +543,7 @@ In order to facilitate the form submission, we’re making use of the same valid
 <p class="block-header">/client/controllers/public/signup.coffee</p>
 ```.lang-coffeescript
 user =
-  email: $('[name="emailAddress"]').val()
+  email: $('[name="emailAddress"]').val().toLowerCase()
   password: $('[name="password"]').val()
   betaToken: $('[name="betaToken"]').val()
 
@@ -568,8 +565,7 @@ Meteor.methods(
   validateBetaToken: (user)->
     check(user,{email: String, password: String, betaToken: String})
 
-    emailRegex = new RegExp("^#{user.email}$",'i')
-    testInvite = Invites.findOne({email: emailRegex, token: user.betaToken}, {fields: {"_id": 1, "email": 1, "token": 1}})
+    testInvite = Invites.findOne({email: user.email, token: user.betaToken}, {fields: {"_id": 1, "email": 1, "token": 1}})
 
     if not testInvite
       throw new Meteor.Error "bad-match", "Hmm, this token doesn't match your email. Try again?"
@@ -590,7 +586,7 @@ Meteor.methods(
 )
 ```
 
-The bulk of this should look familiar, so we won’t beat around the bush. Of course, first, we `check()` our arguments like good boys and girls. Next, we reintroduce our `RegExp` pattern from earlier, again, running this on our email address so that our `findOne()` is done case insensitively on the `email` field. Additionally in our `findOne()` we pass the `token` the user is trying to sign up with.
+The bulk of this should look familiar, so we won’t beat around the bush. Of course, first, we `check()` our arguments like good boys and girls and then in our `findOne()` we pass the `email` and `token` the user is trying to sign up with.
 
 Next, we test in the negative against the result of our `findOne()` which is set to the variable `testInvite`. If our result is false, or, an invite cannot be found with the passed `email` and `token`, we throw an error that will be returned to the client.
 

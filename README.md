@@ -6,7 +6,7 @@ In this recipe we'll help soon-to-be startup Urkelforce add a beta invitation sy
 
 [Read on The Meteor Chef](http://themeteorchef.com/recipes/adding-a-beta-invitation-system-to-your-meteor-application)
 
-[Demo the Recipe (OFFLINE)](#)  
+[Demo the Recipe](http://tmc-002-demo.meteor.com/)  
 
 [Download the Source](https://github.com/themeteorchef/adding-a-beta-invitation-system-to-your-meteor-application/archive/master.zip)
 

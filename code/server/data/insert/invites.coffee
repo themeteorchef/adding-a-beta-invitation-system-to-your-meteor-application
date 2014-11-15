@@ -11,11 +11,8 @@ Meteor.methods(
 
     # Validate that the email we're passing does not already exist. We're doing
     # this on the server to guarantee that we're not doing any double inserts.
-    # If we find the email does exist, throw an error. Here, we create a regExp
-    # passing our invitee's email so that we can check the value without case
-    # sensitivity (i.e. both TeSt@teSt.com and test@test.com will match).
-    newInvitee  = new RegExp("^#{invitee.email}$",'i')
-    emailExists = Invites.findOne({"email": newInvitee})
+    # If we find the email does exist, throw an error.
+    emailExists = Invites.findOne({"email": invitee.email})
 
     if emailExists
       throw new Meteor.Error "email-exists", "It looks like you've already signed up for our beta. Thanks!"

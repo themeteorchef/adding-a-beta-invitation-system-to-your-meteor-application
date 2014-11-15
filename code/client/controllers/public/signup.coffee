@@ -31,7 +31,7 @@ Template.signup.rendered = ->
     submitHandler: ->
       # Grab the user's details.
       user =
-        email: $('[name="emailAddress"]').val()
+        email: $('[name="emailAddress"]').val().toLowerCase()
         password: $('[name="password"]').val()
         betaToken: $('[name="betaToken"]').val()
 
@@ -50,7 +50,7 @@ Template.signup.rendered = ->
           # our user was created on the server. If for some reason they were
           # not created, this will fail. That failure would be rare, but keep
           # it in mind (e.g. if a server disconnected unexpectedly). Also note
-          # that we're using the email/password combo passed above.
+          # that we're using the email/password combo passed above, but
           Meteor.loginWithPassword(user.email, user.password, (error)->
             if error
               alert error.reason

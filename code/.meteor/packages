@@ -19,4 +19,5 @@ alanning:roles
 mrt:moment
 random
 email
-meteorhacks:ssr
+cmather:handlebars-server
+

@@ -1,8 +1,3 @@
-<div class="note">
-<h3>A quick note</h3>
-<p>The demo for this recipe is currently offline. There was an issue deploying to meteor.com in conjunction with the meteorhacks:ssr package used in this recipe. The recipe <em>does</em> work locally, however, so for the moment you will need to <a href="https://github.com/themeteorchef/adding-a-beta-invitation-system-to-your-meteor-application">clone a copy from GitHub</a> and run a server locally. Sorry for the inconvenience! Make sure to follow <a href="http://twitter.com/themeteorchef">@themeteorchef on Twitter</a> for updates.</p>
-</div>
-
 ### Getting Started
 
 This recipe relies on a handful of packages to give us some extra functionality that we'll use to issue beta invites to our users. Before we jump in, let's get each installed and take a look at what functionality they'll give us access to.
@@ -23,10 +18,10 @@ The [Random package](https://atmospherejs.com/meteor/random) is an official pack
 
 <p class="block-header">Terminal</p>
 ```.lang-bash
-meteor add meteorhacks:ssr
+meteor add cmather:handlebars-server
 ```
 
-[SSR](https://atmospherejs.com/meteorhacks/ssr) is a package by Arunoda (of [Meteor Hacks](http://meteorhacks.com)) that gives us the ability to render templates on the server. We'll use this to render our HTML email template with data to send to Urkelforce's beta invitees.
+[Handlebars Server](https://atmospherejs.com/cmather/handlebars-server) is a package by Chris Mather (of [Evented Mind](http://eventedmind.com)) that gives us the ability to render templates on the server. We'll use this to render our HTML email template with data to send to Urkelforce's beta invitees.
 
 <p class="block-header">Terminal</p>
 ```.lang-bash
@@ -443,71 +438,47 @@ Why `false`? This is an added bonus for administrators so we can quickly identif
 
 Now, the final part of this is that once we’ve successfully updated the user’s invite, we need to send them a notification via email.
 
-<p class=“block-header”></p>
+<p class="block-header">/server/data/update/invites.coffee</p>
 ```.lang-coffeescript
-SSR.compileTemplate('sendInvite', Assets.getText('email/send-invite.html'))
-
-emailTemplate = SSR.render('sendInvite',
-  token: token
-  url: url
-  urlWithToken: url + "/#{token}"
-)
-
 Email.send(
   to: invitee.email
   from: "Urkelforce Beta Invitation <dididothat@urkelforce.com>"
   subject: "Welcome to the Urkelforce Beta!"
-  html: emailTemplate
+  html: Handlebars.templates['send-invite'](
+    token: token
+    url: url
+    urlWithToken: url + "/#{token}"
+  )
 )
 ```
 
-Woah smokies, what the heck is all of this?! Earlier, we added a package to our application called `meteorhacks:ssr`. The `ssr` part of that stands for Server Side Rendering. In the code above the two functions calling on `SSR` are allowing us to pass data to and compile an HTML template on the server.
+The `Email.send()` method is made available by the `email` package we installed earlier using `meteor add email`. Here, we set some more obvious items like our to, from, and subject lines, and finally, set our `html` setting equal to a call to `Handlebars.templates['send-invite']` and pass some data to it. What the heck is this?
 
-This is a big deal because it means that we’re able to inject data into a template without being on the client. This is super handy, especially if, say, you want to send HTML email. Let’s break down each function and see what’s going on.
+Earlier, we added a package to our application called `cmather:handlebars-server`. Much like the name implies, this package gives us the ability to render Handlebars templates on the server. As of writing, the ability to render templates on the server _is not_ a part of the Meteor core (though, this is ["under consideration" for a 1.1+ release](https://trello.com/c/Lz07fBAm/7-server-side-rendering)).
 
-```.lang-coffeescript
-SSR.compileTemplate('sendInvite', Assets.getText('email/send-invite.html'))
-```
+The first part of this `Handlebars.templates['send-invite']` is saying "find a Handlebars template called `send-invite.handlebars`," while the second part is passing an object with data to set _in_ the template.
 
-This call to `.compileTemplate()` may look familiar if you read [Recipe #1](http://themeteorchef.com/recipes/exporting-data-from-your-meteor-application/) here on the site. This function is compiling a template for us called `sendInvite`, using the result of an `Assets.getText()` lookup on our `/private` directory for a file called `send-invite.html` nested in the `/email` folder.
+This means that for each key/value specified, we'll now be able to access those values in our template. So in the code above, `urlWithToken: url + "/#{token}"` becomes `{{urlWithToken}}` in our template. Handy! The only caveat to all of this is that our Handlebars template needs to be accessible on the server. Per the documentation for `handlebars-server`:
 
-Recall that `Assets.getText()` looks at the path you pass it _relative to_ the `/private` folder in your project. So here, we’re pulling an HTML email template from `/private/email/send-invite.html`.
+> The templates need to be accesible to the server (i.e. put them inside your /server directory).
 
-It’s up to you to [dig into the email template](https://github.com/themeteorchef/adding-a-beta-invitation-system-to-your-meteor-application/blob/master/code/private/email/send-invite.html), but know that in our next function, we’ll be assigning data to three variables we’ve included (`{{urlWithToken}}`, `{{url}}` and `{{token}}`) inside the file.
+In our example code, we've placed our template in `/server/email/templates/send-invite.handlebars`. We won't show the contents of the template here, but it's recommended to [check out the source for the template on GitHub]().
 
-Next, we set a variable called `emailTemplate` to the result of calling `SSR.render()`:
+So what about the data we're passing to the template? We're passing three items: `token`, `url`, and `urlWithToken`. The `urlWithToken` variable gives us a link that we can assign to a button in our email that users can click. This button/link automatically redirects them to the application, pasting their beta token into the Beta Token field on our signup page (woah!). The `token` and `url` variables give us the option to display the `/signup` url and the user's `token` separately, allowing users to paste in their beta code manually if they wish (some folks don't like clicking third-party links for security/curmudgeon reasons).
 
-```.lang-coffeescript
-emailTemplate = SSR.render('sendInvite',
-  token: token
-  url: url
-  urlWithToken: url + "/#{token}"
-)
-```
-
-Notice here we’re making reference to the `sendInvite` name that we set in our `SSR.compileTemplate` method. We’re also setting our variables equal to the data that we sent over from the client. We’re accounting for two scenarios here.
-
-The primary option (using `urlWithToken`) is making it possible for beta testers to click a button in the email we send them and automatically redirect them to the application, pasting their beta token into the field on our signup page (woah!). The second is to allow users to do this manually, instead pasting in their beta code on their own (not as cool, but hey, we’ve got to account for the curmudgeon factor).
-
-Up next is actually firing off our email. The `Email.send()` method is made available by the `email` package we installed earlier using `meteor add email`. Here, we set some more obvious items like our to, from, and subject lines, and finally, pass our compiled and rendered email template to the `html` property.
-
-<div class="note">
-<h3>A quick note</h3>
-<p>Notice that when we call Email.send(), we’re using the html option. Instead of html you can also pass a text option wherein you can send a single text string. This is great for quick emails like password resets or things that lack the need for fancy HTML woo.</p>
-</div>
-
-Alright, our email is ready to go out! Or is it? We need to talk about one thing: how to handle sending email from our application. If you were to run this method right now, an email wouldn’t actually send. Instead, you would see the contents of the email logged in your terminal. Why?
+Awesome! With our data in place our email is ready to go out. Or is it? We need to talk about one thing: how to handle sending email from our application. If you were to run this method right now, an email wouldn’t actually send. Instead, you would see the contents of the email logged in your terminal. Why?
 
 In order to send email, Meteor needs access to some service to actually _send_ the email on your application’s behalf. The Meteor Development Group recommend a service like [Mailgun](http://mailgun.com) for handling this.
 
-This is what we’re using in our demo, so it’s recommended here too. In order to wire this up, you’ll need to create an account over at Mailgun. Next, you will need to set the `MAIL_URL` environment variable equal to Mailgun’s `smtp://` address with your authentication info included. In the demo I’ve set this up in `/server/admin/startup.coffee`. It looks something like this:
+This is what we’re using in our demo, so it’s recommended here too. In order to wire this up, you’ll need to [create an account over at Mailgun](https://mailgun.com/signup). Next, you will need to set your `MAIL_URL` environment variable equal to Mailgun’s `smtp://` address with your authentication info included. In the demo I’ve set this up in `/server/admin/startup.coffee`. It looks something like this:
 
 ```.lang-coffeescript
 process.env.MAIL_URL = 'smtp://postmaster%40YOURDOMAIN.mailgun.org:YOURPASSWORD@smtp.mailgun.org:587'
 ```
-The long address after the `smtp://` part is your unique URL provided by Mailgun which acts as your “username.” Once you’ve got that in place, Meteor will know that you want to send email via your Mailgun account. Awesome!
 
-With our email out the door and in our user’s mailbox, our last step is to get the user back to our application and signed up!
+The long address after the `smtp://` part is your unique URL provided by Mailgun which acts as your “username.” Once you’ve got that in place, Meteor will know that you want to send email via your Mailgun account. Killer!
+
+With our email out the door and  (theoretically) in our user’s mailbox, our last step is to get the user back to our application and signed up!
 
 ### Getting Users Signed Up
 

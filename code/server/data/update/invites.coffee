@@ -27,8 +27,8 @@ Meteor.methods(
         # If no errors, send the user an email with their invitation.
         Email.send(
           to: invitee.email
-          from: "Urkelforce Beta Invitation <dididothat@urkelforce.com>"
-          subject: "Welcome to the Urkelforce Beta!"
+          from: "The Meteor Chef <business@themeteorchef.com>"
+          subject: "Welcome to Urkelforce!"
           html: Handlebars.templates['send-invite'](
             token: token
             url: url

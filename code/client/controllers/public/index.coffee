@@ -22,12 +22,26 @@ Template.index.rendered = ->
         invited: false
         requested: ( new Date() ).getTime()
 
-      # Call the addToInvitesList method on the server.
-      Meteor.call 'addToInvitesList', invitee, (error,response) ->
+      # Validate our invitee's email address before we perform the insert. This
+      # ensures that we're only adding valid emails to our list. We do this to
+      # prevent bouncing too many emails at Mailgun (which can lead to our
+      # account being banned/suspended if we don't).
+      Meteor.call('validateEmailAddress', invitee.email, (error,response)->
         if error
+          # If we get an error, let our user know.
           alert error.reason
         else
-          alert "Invite requested. We'll be in touch soon. Thanks for your interest in Urkelforce!"
+          if response.error
+            # If we get an error from our method, alert to the user.
+            alert response.error
+          else
+            # If all is well, create the user's account!
+            Meteor.call 'addToInvitesList', invitee, (error,response) ->
+              if error
+                alert error.reason
+              else
+                alert "Invite requested. We'll be in touch soon. Thanks for your interest in Urkelforce!"
+      )
   )
 
 Template.index.events(

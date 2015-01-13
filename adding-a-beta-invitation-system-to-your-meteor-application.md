@@ -283,6 +283,11 @@ This is pretty straightforward. We’re using jQuery to get the value our user h
 
 Finally, to make things easier on admin’s, we pass a unix timestamp for the current time (when the form is actually submitted) using the `( new Date() ).getTime()` method.
 
+<div class="note">
+  <h3>A quick note</h3>
+  <p>Heads up! After this recipe was published, I added an email validation step before calling to the addToInviteesList method on the server. This was added to prevent too many emails bouncing on the demo. The code is visible in <a href="https://github.com/themeteorchef/adding-a-beta-invitation-system-to-your-meteor-application">the master branch on GitHub</a>, but I haven't outlined it here. A similar technique was used in <a href="https://github.com/themeteorchef/roll-your-own-authentication">Recipe #3</a>, so make sure to check it out to see how it's implemented. Note: this update also adds a dependency for the http package (used for the validation on the server).</p>
+</div>
+
 Next, we take all of this and pass it to a method call `addToInvitesList` that we’ll define on the server next. If the method fails or succeeds, we’ll display a popup alert to the user with a message to let them know what’s going on.
 
 Let’s pop over to the server and see how this all ties together.

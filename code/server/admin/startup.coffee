@@ -9,7 +9,7 @@ Meteor.startup(->
   ###
 
   # Define MAIL_URL
-  process.env.MAIL_URL = 'smtp://postmaster%40demo-email.themeteorchef.com:6c383f609a94b9c19136da83628c25ce@smtp.mailgun.org:587'
+  process.env.MAIL_URL = 'Insert your own MAIL_URL from your email provider here.'
 
   ###
     Generate Test Accounts

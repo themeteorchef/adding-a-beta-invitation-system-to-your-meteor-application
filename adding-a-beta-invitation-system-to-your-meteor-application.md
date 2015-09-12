@@ -3,6 +3,7 @@
 This recipe relies on a handful of packages to give us some extra functionality that we'll use to issue beta invites to our users. Before we jump in, let's get each installed and take a look at what functionality they'll give us access to.
 
 <p class="block-header">Terminal</p>
+
 ```.lang-bash
 meteor add alanning:roles
 ```
@@ -10,6 +11,7 @@ meteor add alanning:roles
 The [Roles package](https://atmospherejs.com/alanning/roles) gives us the ability to specify different "types" of users in our application. In this recipe, we'll use Roles to create two types of users: "testers" and "admins."
 
 <p class="block-header">Terminal</p>
+
 ```.lang-bash
 meteor add random
 ```
@@ -17,6 +19,7 @@ meteor add random
 The [Random package](https://atmospherejs.com/meteor/random) is an official package offered by the Meteor Development Group to assist in the generation of random numbers and hexidecimal values. We'll rely on this package to help us generate beta tokens for Urkelforce's beta testers.
 
 <p class="block-header">Terminal</p>
+
 ```.lang-bash
 meteor add cmather:handlebars-server
 ```
@@ -24,6 +27,7 @@ meteor add cmather:handlebars-server
 [Handlebars Server](https://atmospherejs.com/cmather/handlebars-server) is a package by Chris Mather (of [Evented Mind](http://eventedmind.com)) that gives us the ability to render templates on the server. We'll use this to render our HTML email template with data to send to Urkelforce's beta invitees.
 
 <p class="block-header">Terminal</p>
+
 ```.lang-bash
 meteor add email
 ```
@@ -31,6 +35,7 @@ meteor add email
 The [Email package](http://docs.meteor.com/#/full/email) is another package offered by the Meteor Development Group that gives us the ability to send email from our application. We'll use this to handle the delivery of our beta invitation email.
 
 <p class="block-header">Terminal</p>
+
 ```.lang-bash
 meteor add mrt:moment
 ```
@@ -58,6 +63,7 @@ You'll notice that we have two distinct areas in our application: a public side 
 First, let's define our routes. We'll start with the public facing routes that _anyone_ can visit:
 
 <p class="block-header">/client/routes/routes-public.coffee</p>
+
 ```.lang-coffeescript
 Router.route('index',
   path: '/'
@@ -101,6 +107,7 @@ Combined, this pattern gives Urkelforce's users a better experience. We're ensur
 Now we want to focus on the routes that user's will get access to once they're logged in.
 
 <p class="block-header">/client/routes/routes-authenticated.coffee</p>
+
 ```.lang-coffeescript
 Router.route('dashboard',
   path: '/dashboard'
@@ -134,6 +141,7 @@ To make sure that we're keeping Urkelforce's users from going to route's that th
 A filter is nothing more than a function with the specific purpose of checking against a rule and making a decision for where to send the user based on the result of that check. Let's look at our filter functions first, then look at how we need to turn them on.
 
 <p class="block-header">/client/routes/filters.coffee</p>
+
 ```.lang-coffeescript
 checkUserLoggedIn = ->
   if not Meteor.loggingIn() and not Meteor.user()
@@ -177,6 +185,7 @@ We’re doing the same thing in our last filter instead testing for an `admin` u
 Now that we’ve defined our functions, let’s take a look at how we actually _apply_ them to specific routes.
 
 <p class="block-header">/client/routes/filters.coffee</p>
+
 ```.lang-coffeescript
 Router.onBeforeAction checkUserLoggedIn, except: [
   'index',
@@ -233,6 +242,7 @@ Our index controller is where we’ll handle two things: validating our user’s
 To get started, we first need to prevent the submission of our signup form so we can instead defer submission to our validation  (if this is confusing, hang tight, you’ll see how it works shortly). On our template’s `events()` method:
 
 <p class="block-header">/client/controllers/public/index.coffee</p>
+
 ```.lang-coffeescript
 Template.index.events(
   'submit form': (e)->
@@ -243,6 +253,7 @@ Template.index.events(
 Here, we’re simply saying when the form in our `index` template is submitted, don’t do anything. With our form submission deferred, we’ll make a call to our `validation()` method in our template’s `rendered` callback function. Let’s look at everything first and then step through it.
 
 <p class="block-header">/client/controllers/public/index.coffee</p>
+
 ```.lang-coffeescript
 Template.index.rendered = ->
   $('#request-beta-invite').validate(
@@ -266,6 +277,7 @@ The messages setting here simply takes the rules we’ve setup in the `rules` bl
 Finally, we set a callback function in the `submitHandler` setting where we’ll actually run our code when our form is “valid.” Let’s look at what we’re doing after the form is validated.
 
 <p class="block-header">/client/controllers/public/index.coffee</p>
+
 ```.lang-coffeescript
 invitee =
   email: $('[name="emailAddress"]').val().toLowerCase()
@@ -297,6 +309,7 @@ Let’s pop over to the server and see how this all ties together.
 On the server recall that we need to define a method called `addToInvitesList` that actually inserts our user’s invite request into the database. Here’s how that looks:
 
 <p class="block-header">/server/data/insert/invites.coffee</p>
+
 ```.lang-coffeescript
 Meteor.methods(
 
@@ -341,6 +354,7 @@ Our templates are pretty standard, but we should call attention to one item: dat
 To make use of the moment package, we've created a template helper `{{epochToString <variable here>}}` that we can pass an epoch/unix timestamp string to and have it spit out a human-redable string (e.g. instead of `1415983049` you get `Friday, November 14th, 2014`). Let's look at the code powering our helper quick:
 
 <p class="block-header">/client/helpers/helpers-ui.coffee</p>
+
 ```.lang-coffeescript
 UI.registerHelper('epochToString', (timestamp) ->
   moment.unix(timestamp / 1000).format("MMMM Do, YYYY")
@@ -354,6 +368,7 @@ Because we've defined this a UI helper, we can now reuse our `{{epochToString <v
 Now, let’s look at the controller for our first tab where we load our list of “open” invitations, or, invitations that have been requested but not sent/approved.
 
 <p class="block-header">/client/controllers/authenticated/open-invitations.coffee</p>
+
 ```.lang-coffeescript
 Template.openInvitations.helpers(
   hasInvites: ->
@@ -372,6 +387,7 @@ Look familiar? This is where we make use of the `invited` key that we set earlie
 Cool, now, let’s see how we handle processing an invite. In our template, when we loop through our invites we add an “invite” button to each invite. In our controller, we wait for a click event on this to handle calling the method that will create a beta token for our user and send an invite email to them. Let’s take a look:
 
 <p class="block-header">/client/controllers/authenticated/open-invitations.coffee</p>
+
 ```.lang-coffeescript
 Template.openInvitations.events(
   'click .send-invite': ->
@@ -408,6 +424,7 @@ Lastly, after we double check our action with a `confirm()` dialog, we make a ca
 Strap in, this is the best part (in my eyes, at least) of the recipe. Because our invite technically already exists in the database, we’re going to make use of the `update()` method on our `Invites` collection. Let’s take a look:
 
 <p class="block-header">/server/data/update/invites.coffee</p>
+
 ```.lang-coffeescript
 Meteor.methods(
   sendInvite: (invitee,url) ->
@@ -444,6 +461,7 @@ Why `false`? This is an added bonus for administrators so we can quickly identif
 Now, the final part of this is that once we’ve successfully updated the user’s invite, we need to send them a notification via email.
 
 <p class="block-header">/server/data/update/invites.coffee</p>
+
 ```.lang-coffeescript
 Email.send(
   to: invitee.email
@@ -503,6 +521,7 @@ Now, we want to retrieve that token and set it as the value of our Beta Token fi
 Notice that our value parameter is set to a template variable `{{betaToken}}`. Hop over to our controller for the `signup` template in `/client/controllers/public/signup.coffee`. There, we’ll add a template helper that will supply the value for this variable by calling to the `betaToken` `Session` variable we set in our router.
 
 <p class="block-header">/client/controllers/public/signup.coffee</p>
+
 ```.lang-coffeescript
 Template.signup.helpers(
   betaToken: ->
@@ -517,6 +536,7 @@ Now, we need to actually handle the process of creating an account for our user.
 In order to facilitate the form submission, we’re making use of the same validation pattern we covered earlier. To save time, we’re going to focus on the code being called in the `submitHandler` function, again, what happens after the form is deemed “valid.”
 
 <p class="block-header">/client/controllers/public/signup.coffee</p>
+
 ```.lang-coffeescript
 user =
   email: $('[name="emailAddress"]').val().toLowerCase()
@@ -536,6 +556,7 @@ Super straightforward. First we create a `user` variable containing an object wi
 Over on the server, we need to make sure that our user’s email address and beta token exist before we officially provision their account. Here’s how the method is shaping up:
 
 <p class="block-header">/server/data/read/beta-tokens.coffee</p>
+
 ```.lang-coffeescript
 Meteor.methods(
   validateBetaToken: (user)->
@@ -583,6 +604,7 @@ Alright. Last step. Seriously. Recall that before we hopped on the server, we di
 Unfortunately, in order to make use of the `alanning:roles`	 package, we needed to run our `Accounts.createuser()` function on the server. But no worries! We can easily implement an auto-login ourselves. Let’s take a look:
 
 <p class="block-header">/client/controllers/public/signup.coffee</p>
+
 ```.lang-coffeescript
 Meteor.loginWithPassword(user.email, user.password, (error)->
   if error

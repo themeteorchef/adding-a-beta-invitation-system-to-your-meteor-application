@@ -227,7 +227,7 @@ Router.onBeforeAction userAuthenticatedAdmin, only: [
 ]
 ```
 
-Here, we’re making use of `iron:router`’s `onBeforeAction` method in a _global_ sense. You’ll notice that when we defined our public and authenticated routers earlier, we used `onBeforeAction` on a _per route_ basis. The differe here is that we’re telling Iron Router to apply these filter functions to _all_ routes. There are a lot of different applications for this, but one that’s particularly handy is checking whether or not to send a user to a specific route.
+Here, we’re making use of `iron:router`’s `onBeforeAction` method in a _global_ sense. You’ll notice that when we defined our public and authenticated routers earlier, we used `onBeforeAction` on a _per route_ basis. The difference here is that we’re telling Iron Router to apply these filter functions to _all_ routes. There are a lot of different applications for this, but one that’s particularly handy is checking whether or not to send a user to a specific route.
 
 Looking at our second call to `Router.onBeforeAction`, we’re passing our `userAuthenticatedBetaTester` filter function along with an `only` key that holds an array of strings. The strings in this array are the _only_ routes we want this function be applied to, meaning, the function _will not_ run on any route that isn’t in this list.
 

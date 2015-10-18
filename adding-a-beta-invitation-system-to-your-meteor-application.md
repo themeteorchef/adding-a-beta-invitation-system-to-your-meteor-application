@@ -1,6 +1,6 @@
 ### Getting Started
 
-This recipe relies on a handful of packages to give us some extra functionality that we'll use to issue beta invites to our users. Before we jump in, let's get each installed and take a look at what functionality they'll give us access to.
+This recipe relies on a handful of packages to give us some extra functionality that we'll use to issue beta invitations  to our users. Before we jump in, let's get each installed and take a look at what functionality they'll give us access to.
 
 <p class="block-header">Terminal</p>
 
@@ -8,7 +8,15 @@ This recipe relies on a handful of packages to give us some extra functionality 
 meteor add alanning:roles
 ```
 
-The [Roles package](https://atmospherejs.com/alanning/roles) gives us the ability to specify different "types" of users in our application. In this recipe, we'll use Roles to create two types of users: "testers" and "admins."
+The [`alanning:roles package`](https://atmospherejs.com/alanning/roles) gives us the ability to specify different "types" of users in our application. In this recipe, we'll use Roles to create two types of users: "testers" and "admins."
+
+<p class="block-header">Terminal</p>
+
+```.lang-bash
+meteor add iron:router
+```
+
+We'll be using [`iron:router`](http://iron-meteor.github.io/iron-router/) to route users to the proper areas before and after they sign up—and to route administrators to an admin area.
 
 <p class="block-header">Terminal</p>
 
@@ -16,7 +24,7 @@ The [Roles package](https://atmospherejs.com/alanning/roles) gives us the abilit
 meteor add random
 ```
 
-The [Random package](https://atmospherejs.com/meteor/random) is an official package offered by the Meteor Development Group to assist in the generation of random numbers and hexidecimal values. We'll rely on this package to help us generate beta tokens for Urkelforce's beta testers.
+The [`random`](https://atmospherejs.com/meteor/random) package is an official package offered by the Meteor Development Group to assist in the generation of random numbers and hexidecimal values. We'll rely on this package to help us generate beta tokens for Urkelforce's beta testers.
 
 <p class="block-header">Terminal</p>
 
@@ -24,7 +32,7 @@ The [Random package](https://atmospherejs.com/meteor/random) is an official pack
 meteor add cmather:handlebars-server
 ```
 
-[Handlebars Server](https://atmospherejs.com/cmather/handlebars-server) is a package by Chris Mather (of [Evented Mind](http://eventedmind.com)) that gives us the ability to render templates on the server. We'll use this to render our HTML email template with data to send to Urkelforce's beta invitees.
+[`cmather:handlebars-server`](https://atmospherejs.com/cmather/handlebars-server) is a package by Chris Mather (of [Evented Mind](http://eventedmind.com)) that gives us the ability to render templates on the server. We'll use this to render our HTML email template with data to send to Urkelforce's beta invitees.
 
 <p class="block-header">Terminal</p>
 
@@ -32,7 +40,7 @@ meteor add cmather:handlebars-server
 meteor add email
 ```
 
-The [Email package](http://docs.meteor.com/#/full/email) is another package offered by the Meteor Development Group that gives us the ability to send email from our application. We'll use this to handle the delivery of our beta invitation email.
+The [email package](http://docs.meteor.com/#/full/email) is another package offered by the Meteor Development Group that gives us the ability to send email from our application. We'll use this to handle the delivery of our beta invitation email.
 
 <p class="block-header">Terminal</p>
 
@@ -40,7 +48,7 @@ The [Email package](http://docs.meteor.com/#/full/email) is another package offe
 meteor add mrt:moment
 ```
 
-Last but not least, the [Moment package](https://atmospherejs.com/mrt/moment) gives us access to the [moment.js library](http://momentjs.com/) for creating human-readable date and time strings. We'll use this for a UX touch in our invite admin panel for displaying when an invite was requested.
+Last but not least, the [`mrt:moment`](https://atmospherejs.com/mrt/moment) package gives us access to the [moment.js library](http://momentjs.com/) for creating human-readable date and time strings. We'll use this for a UX touch in our invite admin panel for displaying when an invite was requested.
 
 <div class="note">
   <h3>A quick note</h3>
@@ -51,16 +59,17 @@ Last but not least, the [Moment package](https://atmospherejs.com/mrt/moment) gi
 
 To get our beta invitation system up and running, we'll need to define a few routes in our application. Before we jump in, here's what we need:
 
-- A route where users from the public can signup to get an invite.
+- A route where users from the public can sign up to get an invite.
 - A route where users from the public can create their account once they've received a beta token.
 - A route where administrators can see a list of requested invites and manually invite new users.
 - A route where administrators can see a list of invites that have been sent along with their redemption status/
 - An example area where we can send our beta testers _after_ they've created an account.
 
-You'll notice that we have two distinct areas in our application: a public side that _anyone_ can see and an administrative side that only administrators can see. To handle the flow of traffic, we'll make use of Iron Router's before filters to create some rules for _who_ can gain access to _what_ in our application.
+You'll notice that we have two distinct areas in our application: a public side that _anyone_ can see and an administrative side that only administrators can see. To handle the flow of traffic, we'll make use of iron:router's before filters to create some rules for _who_ can gain access to _what_ in our application.
 
 #### Public Routes
-First, let's define our routes. We'll start with the public facing routes that _anyone_ can visit:
+
+First, let's define our routes. We'll start with the public-facing routes that _anyone_ can visit:
 
 <p class="block-header">/client/routes/routes-public.coffee</p>
 
@@ -96,7 +105,9 @@ In this first set of routes, we start with a definition for our `index` route or
 
 The next two routes are one in the same, but each have a unique function. The first `signup` route takes our user to our `/signup` page. But notice: we're setting a `Session` variable called `betaToken` to an empty string. Why?
 
-In our next route, `signup/:token` we offer an alternative version of our route that expects a token to be passed. Here, we set the `betaToken` session variable to be equal to the the token being passed to the route. This is accessed by looking at the params object given to us by Iron Router `@params.token`. **Note**: the `@` here is just CoffeeScript shorthand for `this.`.
+In our next route, `signup/:token` we offer an alternative version of our route that expects a token to be passed. Here, we set the `betaToken` session variable to be equal to the the token being passed to the route. This is accessed by looking at the params object given to us by Iron Router `@params.token`. 
+
+And just so you know, the `@` here is just CoffeeScript shorthand for `this.`.
 
 In our first `/signup` route, we set our `betaToken` to be an empty string so that if our user moves away from our signup page, their token isn't left in the `Session` state. This is a little detail to prevent information from leaking out where it shouldn't.
 
@@ -104,7 +115,7 @@ Combined, this pattern gives Urkelforce's users a better experience. We're ensur
 
 #### Authenticated Routes
 
-Now we want to focus on the routes that user's will get access to once they're logged in.
+Now we want to focus on the routes that users will get access to once they're logged in.
 
 <p class="block-header">/client/routes/routes-authenticated.coffee</p>
 
@@ -174,11 +185,11 @@ We’re doing this in the negative here (`not`) because if both are false (meani
 
 Great! Now, let’s look it our last two filters `userAuthenticatedBetaTester` and `userAuthenticatedAdmin`. Both of these filter functions are identical except for the type of user we’re testing for and where we’re sending them. Let’s review our `userAuthenticatedBetaTester` filter and then assume the same process for our `userAuthenticatedAdmin` filter.
 
-Here, we introduce a new method `Roles.userIsInRole(loggedInUser, ['tester’])` set to a variable of `isBetaTester`. This method is provided by the `alanning:roles` package that we installed at the beginning of the recipe.
+Here, we introduce a new method `Roles.userIsInRole(loggedInUser, ['tester’])` set to a variable of `isBetaTester`. This method is provided by the roles package that we installed at the beginning of the recipe.
 
 This method takes our `loggedInUser` variable (set to `Meteor.user()`) and tests it against a single value array `[‘tester’]`.
 
-When it runs, this method says “look at the current user and see if they have a role of ‘tester’ applied to their account.” In this instance, if the answer is “yes,” we send the user to our `/dashboard` route.
+When it runs, this method says “look at the current user and see if they have a role of 'tester' applied to their account.” In this instance, if the answer is “yes,” we send the user to our `/dashboard` route.
 
 We’re doing the same thing in our last filter instead testing for an `admin` user type and sending any user that’s a positive match to `/invites`.
 
@@ -216,13 +227,13 @@ Router.onBeforeAction userAuthenticatedAdmin, only: [
 ]
 ```
 
-Here, we’re making use of Iron Router’s `onBeforeAction` method in a _global_ sense. You’ll notice that when we defined our public and authenticated routers earlier, we used `onBeforeAction` on a _per route_ basis. The differe here is that we’re telling Iron Router to apply these filter functions to _all_ routes. There are a lot of different applications for this, but one that’s particularly handy is checking whether or not to send a user to a specific route.
+Here, we’re making use of `iron:router`’s `onBeforeAction` method in a _global_ sense. You’ll notice that when we defined our public and authenticated routers earlier, we used `onBeforeAction` on a _per route_ basis. The differe here is that we’re telling Iron Router to apply these filter functions to _all_ routes. There are a lot of different applications for this, but one that’s particularly handy is checking whether or not to send a user to a specific route.
 
 Looking at our second call to `Router.onBeforeAction`, we’re passing our `userAuthenticatedBetaTester` filter function along with an `only` key that holds an array of strings. The strings in this array are the _only_ routes we want this function be applied to, meaning, the function _will not_ run on any route that isn’t in this list.
 
 Nifty, eh? We can see the reverse of the `only` option `except` being used above, telling Iron Router to apply our `checkUserLoggedIn` filter on _all_ routes _except_ for the given list.
 
-Alright! Our routes are all setup. Next, we’re going to jump into controllers for our templates.
+All right! Our routes are all set up. Next, we’re going to jump into controllers for our templates.
 
 <div class="note">
 <h3>A quick note</h3>
@@ -239,7 +250,7 @@ In our index template `/client/views/public/index.html` we have a field where us
 
 Our index controller is where we’ll handle two things: validating our user’s email address and when valid, add the user to our beta list. To handle validation, we’re making use of the `themeteorchef:jquery-validation` package that’s included in the source for this recipe (not mentioned above).
 
-To get started, we first need to prevent the submission of our signup form so we can instead defer submission to our validation  (if this is confusing, hang tight, you’ll see how it works shortly). On our template’s `events()` method:
+To get started, we first need to prevent the submission of our signup form so we can instead defer submission to our validation. (If this is confusing, hang tight. You’ll see how it works shortly.) On our template’s `events()` method:
 
 <p class="block-header">/client/controllers/public/index.coffee</p>
 
@@ -293,7 +304,7 @@ invitee =
 
 This is pretty straightforward. We’re using jQuery to get the value our user has passed to the `[name=“emailAddress”]` field (converting the value to lowercase to prevent getting a mixed case value from the user) and then setting two additional values `invited: false` and `requested: ( new Date() ).getTime()`. The `invited: false` key/value is saying that our user has _not_ been invited yet. We’re going to make use of this later on to determine which list our invite should show up on.
 
-Finally, to make things easier on admin’s, we pass a unix timestamp for the current time (when the form is actually submitted) using the `( new Date() ).getTime()` method.
+To make things easier on admins, we pass a Unix timestamp for the current time (when the form is actually submitted) using the `( new Date() ).getTime()` method.
 
 <div class="note">
   <h3>A quick note</h3>
@@ -330,13 +341,13 @@ Meteor.methods(
 )
 ```
 
-First, we make sure to make use of the [Meteor Check package](http://docs.meteor.com/#/full/check_package) to ensure that the data we’re getting from the client is what we actually want. Recall we did this in [Recipe # 1: Exporting Data From Your Meteor Application](http://themeteorchef.com/recipes/exporting-data-from-your-meteor-application/).
+First, we make sure to make use of Meteor's [`check`](http://docs.meteor.com/#/full/check_package) package to ensure that the data we’re getting from the client is what we actually want. You might recall that we did this in our first recipe, [Exporting Data From Your Meteor Application](http://themeteorchef.com/recipes/exporting-data-from-your-meteor-application/).
 
 Now we take our `invitee.email` value and pass it to a `findOne` call on our `Invites` collection. Setting this to a variable `emailExists`, we use it in an if/else statement that throws an error that will be sent back to the client if the email is found, and if not (it’s unique), insert the user into the database.
 
-Notice that we’ve added two lines of code for checking how many users currently exist in our beta and then incrementing that number by one, adding it to the invite before insert it into the database. This is entirely optional, but a nice way to identify the order in which invites have come in (e.g. if you want to invite older requests first).
+Notice that we’ve added two lines of code for checking how many users currently exist in our beta and then incrementing that number by one, adding it to the invite before insert it into the database. This is entirely optional, but it's a nice way to identify the order in which invites have come in (e.g. if you want to invite older requests first).
 
-Blammo! We can officially take emails from interested users on our index page and add them to our “invites list.” In the next part of this recipe, we’ll look at approving invites, sending an email to the user, and getting their account created using a beta token!
+Blammo! We can officially take emails from interested users on our index page and add them to our “invites list.” In the next part of this recipe, we’ll look at approving invitations, sending an email to the user, and getting their account created using a beta token!
 
 <div class="note">
 <h3>A quick note</h3>
@@ -349,9 +360,9 @@ The halfway point! Now we get into some really fun stuff. The next thing we need
 
 Again, we’re going to skip going too far into our template and instead focus on its controller. A quick overview: we’ve split our invitations list into two templates: `/client/views/authenticated/open-invitations.html` and `/client/views/authenticated/closed-invitations.html`, both combined using a tab interface in `/client/views/authenticated/invites.html`.
 
-Our templates are pretty standard, but we should call attention to one item: dates. Recall earlier that we installed a package `mrt:moment` that gave us access to the [moment.js](http://momentjs.com/) library. Both in our "open" invitations list and our "closed" invitations list, we display a date for each invite. A date for when the invite was requested and a date for when the invite was approved/sent, respectively.
+Our templates are pretty standard, but we should call attention to one item: dates. Recall earlier that we installed a package mrt:moment that gave us access to the [moment.js](http://momentjs.com/) library. Both in our "open" invitations list and our "closed" invitations list, we display a date for each invite. A date for when the invite was requested and a date for when the invite was approved/sent, respectively.
 
-To make use of the moment package, we've created a template helper `{{epochToString <variable here>}}` that we can pass an epoch/unix timestamp string to and have it spit out a human-redable string (e.g. instead of `1415983049` you get `Friday, November 14th, 2014`). Let's look at the code powering our helper quick:
+To make use of the moment package, we've created a template helper `{{epochToString <variable here>}}` that we can pass an epoch/Unix timestamp string to and have it spit out a human-readable string (e.g. instead of `1415983049` you get `Friday, November 14th, 2014`). Let's look at the code powering our helper quick:
 
 <p class="block-header">/client/helpers/helpers-ui.coffee</p>
 
@@ -382,7 +393,7 @@ Template.openInvitations.helpers(
 
 In the first part of our controller for our `openInvitations` template, we create two helpers to check for the existence of our data and then load it into the template. This is pretty bog standard, however, we should call attention to the parameter being passed to our `find()` method's in both helpers: `{invited: false}`.
 
-Look familiar? This is where we make use of the `invited` key that we set earlier. This allows us to pull only the invites that _haven’t_ been sent yet. Nice! **Note**: we’re again making heavy use of the `fields` option on our `find()` so that we only pull in the data that we need.
+Look familiar? This is where we make use of the `invited` key that we set earlier. This allows us to pull only the invites that _haven’t_ been sent yet. Nice! Note that we’re again making heavy use of the `fields` option on our `find()` so that we only pull in the data that we need.
 
 Cool, now, let’s see how we handle processing an invite. In our template, when we loop through our invites we add an “invite” button to each invite. In our controller, we wait for a click event on this to handle calling the method that will create a beta token for our user and send an invite email to them. Let’s take a look:
 
@@ -407,17 +418,18 @@ Template.openInvitations.events(
           alert "Invite sent to #{invitee.email}!"
 )
 ```
-Ok, so here we’re doing a couple of things a few things. First, we build out an object to send to the server with the `_id` and `email` of the user we’re inviting. What’s unique about this is we’re not calling to an input field, but rather, making use of `@` or in good ol’ JavaScript `this.`.
+
+Okay, so here we’re doing a couple of things a few things. First, we build out an object to send to the server with the `_id` and `email` of the user we’re inviting. What’s unique about this is we’re not calling to an input field, but rather, making use of `@` or in good ol’ JavaScript `this.`.
 
 `this` in this context (hang in there) means accessing the data context for the current item. Because we’re using an `{{#each}}` loop in our template, this translates to being the _currently looped item_. Said another way, looking at a list of our invites, `this` is like pointing to the second item and saying give me the data for this item. Confusing at first, but really cool and fun to use once you get the hang of it.
 
 Next, we set a variable `url` equal to the value of `window.location.origin + "/signup”`. What does this mean? `window.location.origin` gives us the base url of where this script is running from.
 
-We’re doing this here because we’ll be sending this URL to the server to be sent as part of our email. We want our user’s to be able to click a button in their email that links directly to the signup form.
+We’re doing this here because we’ll be sending this URL to the server as part of our email. We want our users to be able to click a button in their email that links directly to the signup form.
 
-Doing this ensures we’re grabbing the url from where the request is originating (e.g. if I run this on my local computer it would be `http://localhost:3000` whereas on the demo it’s `http://tmc-002-demo.meteor.com`). Neat! This is handy because it allows us to skip hardcoding URLs into our application that we could forget to change before going into production.
+Doing this ensures we’re grabbing the URL from where the request is originating. For example, if I run this on my local computer it would be `http://localhost:3000` whereas on the demo it’s `http://tmc-002-demo.meteor.com`. Neat! This is handy because it allows us to skip hardcoding URLs into our application that we could forget to change before going into production.
 
-Lastly, after we double check our action with a `confirm()` dialog, we make a call to our `sendInvite` method on the server, passing our `invitee` and `url` variables independently. Rad. Now, let’s move over to the server and take a look a how we fire off an email to our user.
+Lastly, after we double-check our action with a `confirm()` dialog, we make a call to our `sendInvite` method on the server, passing our `invitee` and `url` variables independently. Rad. Now, let’s move over to the server and take a look a how we fire off an email to our user.
 
 #### Sending Invites on the Server
 
@@ -458,7 +470,7 @@ With this, we can now update our user with the appropriate information. Again, w
 
 Why `false`? This is an added bonus for administrators so we can quickly identify which beta testers have actually opened their invite and created an account. Totally optional but very helpful if you intend to track metrics or other startupy stuff in your application.
 
-Now, the final part of this is that once we’ve successfully updated the user’s invite, we need to send them a notification via email.
+Now, the final part of this is that once we’ve successfully updated the user’s invitation, we need to send them a notification via email.
 
 <p class="block-header">/server/data/update/invites.coffee</p>
 
@@ -481,13 +493,13 @@ Earlier, we added a package to our application called `cmather:handlebars-server
 
 The first part of this `Handlebars.templates['send-invite']` is saying "find a Handlebars template called `send-invite.handlebars`," while the second part is passing an object with data to set _in_ the template.
 
-This means that for each key/value specified, we'll now be able to access those values in our template. So in the code above, `urlWithToken: url + "/#{token}"` becomes `{{urlWithToken}}` in our template. Handy! The only caveat to all of this is that our Handlebars template needs to be accessible on the server. Per the documentation for `handlebars-server`:
+This means that for each key/value specified, we'll now be able to access those values in our template. So in the code above, `urlWithToken: url + "/#{token}"` becomes `{{urlWithToken}}` in our template. Handy! The only caveat to all of this is that our Handlebars template needs to be accessible on the server. Per [the documentation](https://github.com/cmather/meteor-handlebars-server) for `handlebars-server`:
 
-> The templates need to be accesible to the server (i.e. put them inside your /server directory).
+> The templates need to be accessible to the server (i.e. put them inside your `/server` directory).
 
-In our example code, we've placed our template in `/server/email/templates/send-invite.handlebars`. We won't show the contents of the template here, but it's recommended to [check out the source for the template on GitHub]().
+In our example code, we've placed our template in `/server/email/templates/send-invite.handlebars`. We won't show the contents of the template here, but it's recommended to [check out the source for the template on GitHub](https://github.com/themeteorchef/adding-a-beta-invitation-system-to-your-meteor-application/blob/master/code/server/email/templates/send-invite.handlebars).
 
-So what about the data we're passing to the template? We're passing three items: `token`, `url`, and `urlWithToken`. The `urlWithToken` variable gives us a link that we can assign to a button in our email that users can click. This button/link automatically redirects them to the application, pasting their beta token into the Beta Token field on our signup page (woah!). The `token` and `url` variables give us the option to display the `/signup` url and the user's `token` separately, allowing users to paste in their beta code manually if they wish (some folks don't like clicking third-party links for security/curmudgeon reasons).
+So what about the data we're passing to the template? We're passing three items: `token`, `url`, and `urlWithToken`. The `urlWithToken` variable gives us a link that we can assign to a button in our email that users can click. This button  automatically redirects them to the application, pasting their beta token into the Beta Token field on our signup page (woah!). The `token` and `url` variables give us the option to display the `/signup` url and the user's `token` separately, allowing users to paste in their beta code manually if they wish (some folks don't like clicking third-party links for security/curmudgeon reasons).
 
 Awesome! With our data in place our email is ready to go out. Or is it? We need to talk about one thing: how to handle sending email from our application. If you were to run this method right now, an email wouldn’t actually send. Instead, you would see the contents of the email logged in your terminal. Why?
 
@@ -510,6 +522,7 @@ For this last part, we’re going to focus on getting our users back to our appl
 ```.lang-markup
 http://website.com/signup/xj31mat531
 ```
+
 That last part is their token. Because we want our users to have a great experience using our application, we’re going to automate this process a bit. Recall earlier when we set up our routes? When we defined our `/signup/:token` route, we also defined a `Session` variable in our `onBeforeAction` callback function called `betaToken`, equal to the token in our URL.
 
 Now, we want to retrieve that token and set it as the value of our Beta Token field on our signup form as soon as the user visits the page (in the biz we call this [“magic”](http://media.giphy.com/media/ujUdrdpX7Ok5W/giphy.gif)). In our template, here is how our Beta Token field looks:
@@ -531,7 +544,7 @@ Template.signup.helpers(
 
 Short, simple, sweet. Now when our user hits the `/signup` page with their token, it will automatically show up in the field. Copy and paste is for _chumps_. Alright, back to adult time.
 
-Now, we need to actually handle the process of creating an account for our user. The trick, here, is that we want to make sure that the user signing up (their email address) exists in our invites list _and_ that they have a valid invite token (again, we’ve written our code so that this only exists _after_ an administrator has decided to invite a user).
+Now we need to actually handle the process of creating an account for our user. The trick, here, is that we want to make sure that the user signing up (their email address) exists in our invites list _and_ that they have a valid invite token (again, we’ve written our code so that this only exists _after_ an administrator has decided to invite a user).
 
 In order to facilitate the form submission, we’re making use of the same validation pattern we covered earlier. To save time, we’re going to focus on the code being called in the `submitHandler` function, again, what happens after the form is deemed “valid.”
 
@@ -549,7 +562,8 @@ Meteor.call 'validateBetaToken', user, (error)->
   else
     # What we’ll do when the method succeeds.
 ```
-Super straightforward. First we create a `user` variable containing an object with all of the values entered into our form, passing those to a method call for `validateBetaToken` on our server. Easy peasy. You’ll notice a hint that we’ll need to do one more thing on the client before call this thing complete. Before we do, let’s jump over to the server and look at how we’re handling our token validation.
+
+Super straightforward. First we create a `user` variable containing an object with all of the values entered into our form, passing those to a method call for `validateBetaToken` on our server. Easy peasy. You’ll notice a hint that we’ll need to do one more thing on the client before we call this thing complete. Before we do, let’s jump over to the server and look at how we’re handling our token validation.
 
 #### Token Validation on the Server
 
@@ -589,7 +603,7 @@ Next, we test in the negative against the result of our `findOne()` which is set
 
 Conversely, if all goes well, we do three things. First, we go ahead and create an account for our user. Here, we’re making use of the `email` and `password` values the user entered on the client. Next, we’re making sure that our new user is identified as a “tester.”
 
-To do this, we’re reintroducing the `alanning:roles` package we saw when we were setting up routing. This time we make use of the `Roles.addUsersToRoles()` method to set the `roles` value on our user’s new account equal to `[‘tester’]`.
+To do this, we’re reintroducing the alanning:roles package we saw when we were setting up routing. This time we make use of the `Roles.addUsersToRoles()` method to set the `roles` value on our user’s new account equal to `[‘tester’]`.
 
 Now, when our user logs in, our route filters will be able to tell that they’re a tester (as opposed to an admin) and direct them to the correct part of the application. _Hot diggity dog_.
 
@@ -597,11 +611,11 @@ Lastly, we tie everything up in a bow by updating our invite to show that our us
 
 Okay. Phew. We are really close. There’s just _one more thing_.
 
-#### Back To the Client
+#### Back to the Client
 
 Alright. Last step. Seriously. Recall that before we hopped on the server, we did a little foreshadowing that we’d need to do something else on the client before we called it a day. If you’re keen you probably realized that because we created our user’s account on the server, we lose the nice UX touch of automatically logging in our user.
 
-Unfortunately, in order to make use of the `alanning:roles`	 package, we needed to run our `Accounts.createuser()` function on the server. But no worries! We can easily implement an auto-login ourselves. Let’s take a look:
+Unfortunately, in order to make use of the alanning:roles package, we needed to run our `Accounts.createuser()` function on the server. But no worries! We can easily implement an auto-login ourselves. Let’s take a look:
 
 <p class="block-header">/client/controllers/public/signup.coffee</p>
 
@@ -618,7 +632,7 @@ In the `else` statement of our `Meteor.call ‘validateBetaToken’` method’s 
 
 Wait, how does that work? Well, because we’re creating the user’s account on the server _before_ we make a call to `loginWithPassword()`, we know that the user’s account already exists with an email and password identical to what they typed in. It sounds a bit loopy, but makes perfect sense if you think about it.
 
-Ok! With our user being logged in, assuming we don’t run into any errors, we cap off our code with a call to `Router.go ‘/dashboard’` which tells Iron Router to redirect to the `/dashboard` route.
+Okay! With our user being logged in, assuming we don’t run into any errors, we cap off our code with a call to `Router.go ‘/dashboard’` which tells Iron Router to redirect to the `/dashboard` route.
 
 Drumroll please…
 

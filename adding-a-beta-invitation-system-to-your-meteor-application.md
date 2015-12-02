@@ -1,6 +1,46 @@
-### Getting Started
+<div class="note info">
+  <h3>Pre-Written Code <i class="fa fa-info"></i></h3>
+  <p><strong>Heads up</strong>: this recipe relies on some code that has been pre-written for you (like routes and components), <a href="https://github.com/themeteorchef/adding-a-beta-invitation-system-to-your-meteor-application">available in the recipe's repository on GitHub</a>. During this recipe, our focus will only be on implementing an invitations feature. If you find yourself asking "we didn't cover that, did we?", make sure to check the source on GitHub.</p>
+</div>
 
-This recipe relies on a handful of packages to give us some extra functionality that we'll use to issue beta invitations  to our users. Before we jump in, let's get each installed and take a look at what functionality they'll give us access to.
+<div class="note">
+  <h3>Additional Packages <i class="fa fa-warning"></i></h3>
+  <p>This recipe relies on several other packages that come as part of <a href="https://themeteorchef.com/base">Base</a>, the boilerplate kit used here on The Meteor Chef. The packages listed below are merely recipe-specific additions to the packages that are included by default in the kit. Make sure to reference the <a href="https://themeteorchef.com/base/packages-included">Packages Included list</a> for Base to ensure you have fulfilled all of the dependencies.</p>
+</div>
+
+### Prep
+- **Time**: ~2-3 hours
+- **Difficulty**: Intermediate
+- **Additional knowledge required**: writing routes with [Flow Router](https://themeteorchef.com/snippets/client-side-routing-with-flow-router/), working with [React](https://themeteorchef.com/recipes/getting-started-with-react), using [Meteor methods](https://docs.meteor.com/#/full/meteor_methods), and [sending email](https://themeteorchef.com/snippets/using-the-email-package).
+
+### What are we building?
+One of our clients, a new startup called "Urkelforce," is readying the release of their beta application. Because they're so focused on the product, they've asked us if we could help them out with a few tasks. In particular, they're looking to implement a beta invitation system that will allow people who are interested in Urkelforce to sign up and try it out. They've asked that the invitation system works so that they can send out invites manually as their capacity for more users grows.
+
+<figure>
+  <img src="https://tmc-post-content.s3.amazonaws.com/urkelforce-demo.gif" alt="The sign up page we'll be building.">
+  <figcaption>The sign up page we'll be building.</figcaption>
+</figure>
+
+As part of their request, they've asked that we build the invitation system using React (their main product uses React and they'd like to be able to maintain this after the fact). In this recipe, we're going to help them out and build a complete invitation system. We'll create a sign up page for new users, a flow for sending out invitations, and a way for users who have been invited to accept their invitation.
+
+### Ingredients
+Before we start building, make sure that you've installed the following packages in your application. We'll use these at different points in the recipe, so it's best to install these now so we have access to them later.
+
+#### Meteor packages
+
+<p class="block-header">Terminal</p>
+
+```.lang-bash
+meteor add react
+```
+We'll use the `react` package—created by the Meteor Development Group—to give us access to the [React](http://facebook.github.io/react/) user interface library. This well help us to build our interface with reusable components.
+
+<p class="block-header">Terminal</p>
+
+```.lang-bash
+meteor add kadira:react-layout
+```
+We'll use the `kadira:react-layout` package to help us render some of our React components from within our routes.
 
 <p class="block-header">Terminal</p>
 
@@ -8,15 +48,7 @@ This recipe relies on a handful of packages to give us some extra functionality 
 meteor add alanning:roles
 ```
 
-The [`alanning:roles package`](https://atmospherejs.com/alanning/roles) gives us the ability to specify different "types" of users in our application. In this recipe, we'll use Roles to create two types of users: "testers" and "admins."
-
-<p class="block-header">Terminal</p>
-
-```.lang-bash
-meteor add iron:router
-```
-
-We'll be using [`iron:router`](http://iron-meteor.github.io/iron-router/) to route users to the proper areas before and after they sign up—and to route administrators to an admin area.
+The `alanning:roles` gives us the ability to specify different "types" of users in our application. In this recipe, we'll use Roles to create two types of users: "testers" and "admins."
 
 <p class="block-header">Terminal</p>
 
@@ -24,15 +56,7 @@ We'll be using [`iron:router`](http://iron-meteor.github.io/iron-router/) to rou
 meteor add random
 ```
 
-The [`random`](https://atmospherejs.com/meteor/random) package is an official package offered by the Meteor Development Group to assist in the generation of random numbers and hexidecimal values. We'll rely on this package to help us generate beta tokens for Urkelforce's beta testers.
-
-<p class="block-header">Terminal</p>
-
-```.lang-bash
-meteor add cmather:handlebars-server
-```
-
-[`cmather:handlebars-server`](https://atmospherejs.com/cmather/handlebars-server) is a package by Chris Mather (of [Evented Mind](http://eventedmind.com)) that gives us the ability to render templates on the server. We'll use this to render our HTML email template with data to send to Urkelforce's beta invitees.
+The `random` package is an official package offered by the Meteor Development Group to assist in the generation of random numbers and hexidecimal values. We'll rely on this package to help us generate beta tokens for Urkelforce's beta testers.
 
 <p class="block-header">Terminal</p>
 
@@ -40,7 +64,7 @@ meteor add cmather:handlebars-server
 meteor add email
 ```
 
-The [email package](http://docs.meteor.com/#/full/email) is another package offered by the Meteor Development Group that gives us the ability to send email from our application. We'll use this to handle the delivery of our beta invitation email.
+The `email` package is another package offered by the Meteor Development Group that gives us the ability to send email from our application. We'll use this to handle the delivery of our beta invitation email.
 
 <p class="block-header">Terminal</p>
 
@@ -48,600 +72,946 @@ The [email package](http://docs.meteor.com/#/full/email) is another package offe
 meteor add mrt:moment
 ```
 
-Last but not least, the [`mrt:moment`](https://atmospherejs.com/mrt/moment) package gives us access to the [moment.js library](http://momentjs.com/) for creating human-readable date and time strings. We'll use this for a UX touch in our invite admin panel for displaying when an invite was requested.
+Last but not least, the `mrt:moment` package gives us access to the [moment.js library](http://momentjs.com/) for creating human-readable date and time strings. We'll use this for a UX touch in our invite admin panel for displaying when an invite was requested.
 
-<div class="note">
-  <h3>A quick note</h3>
-  <p>This recipe relies on several other packages that come as part of <a href="https://github.com/themeteorchef/base">Base</a>, the boilerplate kit used here on The Meteor Chef. The packages listed above are merely additions to the packages that are included by default in the kit. Make sure to reference the <a href="https://github.com/themeteorchef/base#packages-included">Packages Included</a> list for Base to ensure you have fulfilled all of the dependencies.</p>  
-</div>
-
-### Setting Up Routes & Filtering
+### Defining our routes
 
 To get our beta invitation system up and running, we'll need to define a few routes in our application. Before we jump in, here's what we need:
 
 - A route where users from the public can sign up to get an invite.
 - A route where users from the public can create their account once they've received a beta token.
 - A route where administrators can see a list of requested invites and manually invite new users.
-- A route where administrators can see a list of invites that have been sent along with their redemption status/
+- A route where administrators can see a list of invites that have been sent along with their redemption status.
 - An example area where we can send our beta testers _after_ they've created an account.
 
-You'll notice that we have two distinct areas in our application: a public side that _anyone_ can see and an administrative side that only administrators can see. To handle the flow of traffic, we'll make use of iron:router's before filters to create some rules for _who_ can gain access to _what_ in our application.
+You'll notice that we have two distinct areas in our application: a public side that _anyone_ can see and an administrative side that only administrators can see. To handle the flow of traffic, we'll make use of [component-based authentication](https://themeteorchef.com/snippets/authentication-with-react-and-flow-router) which will allow us to selectively render components based on things like a user's role. To get started, let's take a quick look at how our routes are set up and discuss their overall behavior.
 
 #### Public Routes
 
-First, let's define our routes. We'll start with the public-facing routes that _anyone_ can visit:
+First, let's define our public routes. These are the public-facing routes that _anyone_ can visit:
 
-<p class="block-header">/client/routes/routes-public.coffee</p>
+<p class="block-header">/both/routes/public.jsx</p>
 
-```.lang-coffeescript
-Router.route('index',
-  path: '/'
-  template: 'index'
-  onBeforeAction: ->
-    Session.set 'currentRoute', 'index'
-    @next()
-)
+```javascript
+const publicRoutes = FlowRouter.group({
+  name: 'public'
+});
 
-Router.route('signup',
-  path: '/signup'
-  template: 'signup'
-  onBeforeAction: ->
-    Session.set 'currentRoute', 'signup'
-    Session.set 'betaToken', ''
-    @next()
-)
+publicRoutes.route( '/', {
+  name: 'index',
+  action() {
+    ReactLayout.render( App, { yield: <Index /> } );
+  }
+});
 
-Router.route('signup/:token',
-  path: '/signup/:token'
-  template: 'signup'
-  onBeforeAction: ->
-    Session.set 'currentRoute', 'signup'
-    Session.set 'betaToken', @params.token
-    @next()
-)
+publicRoutes.route( '/signup', {
+  name: 'signup',
+  action() {
+    ReactLayout.render( App, { yield: <Signup /> } );
+  }
+});
+
+publicRoutes.route( '/signup/:token', {
+  name: 'signup',
+  action( params ) {
+    ReactLayout.render( App, { yield: <Signup token={ params.token } /> } );
+  }
+});
+
+publicRoutes.route( '/login', {
+  name: 'login',
+  action() {
+    ReactLayout.render( App, { yield: <Login /> } );
+  }
+});
 ```
 
-In this first set of routes, we start with a definition for our `index` route or `/`. This is where we will be placing our signup form so people who are interested in joining our beta can request an invite.
+Here, we define a route group called `publicRoutes` and assign each of our routes. For each route, we do three big things: first, we provide a path that the user can visit, a name for the route (so we can reference it later), and we make a call `ReactLayout.render()` which helps us to specify which component we should render on the page.
 
-The next two routes are one in the same, but each have a unique function. The first `signup` route takes our user to our `/signup` page. But notice: we're setting a `Session` variable called `betaToken` to an empty string. Why?
+That last part, rendering a component, is the most important. Notice that for each route, we're passing two arguments to `ReactLayout.render()`: `App`, the name of a _layout_ component that we'll define in a little bit and an object with a property `yield`. Within the `App` component that we'll create—our layout—we'll provide an area called `yield` which is where the React component we're passing will ultimately be rendered. 
 
-In our next route, `signup/:token` we offer an alternative version of our route that expects a token to be passed. Here, we set the `betaToken` session variable to be equal to the the token being passed to the route. This is accessed by looking at the params object given to us by Iron Router `@params.token`. 
+All of the components we're passing here are pretty basic. Because our routes file is being defined using JSX—React's spiffy new syntax for meshing our markup with our JavaScript—we can specify the React component we want to render directly in this file like `<Index />`. Neat, eh? This admittedly takes a bit of getting used to, but it does help to keep things consistent and clear.
 
-And just so you know, the `@` here is just CoffeeScript shorthand for `this.`.
+One thing we should point out now before moving ahead is the route being defined at `/signup/:token`. Because our goal is to eventually send new users an invitation email, we'll need a route where we can send them to actually _claim_ their invitation. Here, we're creating a route that accepts a `:token` parameter, meaning, any value passed in that portion of the url is made accessible to our `action()` method's `params` argument on our route. Inside of our route definition, we make use of this by passing the current value of `:token` as a _prop_—React-slang for "property"—to our `<Signup />` component.
 
-In our first `/signup` route, we set our `betaToken` to be an empty string so that if our user moves away from our signup page, their token isn't left in the `Session` state. This is a little detail to prevent information from leaking out where it shouldn't.
-
-Combined, this pattern gives Urkelforce's users a better experience. We're ensuring that, even without a token, someone can make it to the `/signup` page without receiving an error. This _does not_ mean, however, that they can signup without a token.
+Don't let this startle you now. Just remember that we're passing this through now so we can make use of it later. Next up, let's take a quick look at the routes we'll have access to when a user is authenticated. These are a bit simpler, so we'll just take a quick peek.
 
 #### Authenticated Routes
+Just two authenticated routes will get the job done for us:
 
-Now we want to focus on the routes that users will get access to once they're logged in.
+<p class="block-header">/both/routes/authenticated.jsx</p>
 
-<p class="block-header">/client/routes/routes-authenticated.coffee</p>
+```javascript
+const authenticatedRoutes = FlowRouter.group({
+  name: 'authenticated'
+});
 
-```.lang-coffeescript
-Router.route('dashboard',
-  path: '/dashboard'
-  template: 'dashboard'
-  onBeforeAction: ->
-    Session.set 'currentRoute', 'dashboard'
-    @next()
-)
+authenticatedRoutes.route( '/dashboard', {
+  name: 'dashboard',
+  action() {
+    ReactLayout.render( App, { yield: <Dashboard /> } );
+  }
+});
 
-Router.route('invites',
-  path: '/invites'
-  template: 'invites'
-  waitOn: ->
-    Meteor.subscribe '/invites'
-  onBeforeAction: ->
-    Session.set 'currentRoute', 'invites'
-    @next()
-)
+authenticatedRoutes.route( '/invites', {
+  name: 'invites',
+  action() {
+    ReactLayout.render( App, { yield: <InvitesList /> } );
+  }
+});
+```
+Nearly identical to our public routes. Here, we define two routes: `/dashboard` and `/invites`. The first is where we'll send our users once they've accepted their invitation and have been logged in. The second, `/invites`, will be used to show administrators a list of the invite requests for the app as well as those that have already been sent out (along with their acceptance status).
+
+Cool! So at this point we have all of our routes set up along with the components they'll need to render. Next up, let's set up that `App` component as it will be responsible for rendering each of our components throughout the recipe, as well as handling our authentication.
+
+### Defining an `App` layout
+In the last step, we defined each of the routes in our application. As part of those routes, we included a call to `ReactLayout.render()` which is responsible for rendering the specified component(s) for that route. As part of that call, we also specified a layout `App` that we want to use to determine the positioning of our rendered component. Huh? That deserves a bit of clarity.
+
+A layout component is best thought of as a wrapper. Its responsibility is to "wrap" the content of our application, or, the current component. Generally speaking, layout components are handy because they allow us to define globally visible elements on the page like our application's header and wrap a container element around our content. In the context of this recipe, we'll use a layout component called `App` which will allow us to add some global elements, but also control how our users can navigate around the app.
+
+<p class="block-header">/client/components/layouts/app.jsx</p>
+
+```javascript
+App = React.createClass({
+  [...]
+  render() {
+    return <div className="app-root">
+      <AppHeader hasUser={ this.data.hasUser } />
+      <div className="container">
+        { this.data.loggingIn ? this.loading() : this.getView() }
+      </div>
+    </div>;
+  }
+});
 ```
 
-An even simpler version of what we saw above. Here, we simply define two routes: `/dashboard` and `/invites`. The dashboard in this instance is where we'll send Urkelforce's beta testers after they've signed up (this is just for example, you can send your own users wherever you'd like).
+Let's start at the bottom. Here, we can see our `App` component being defined along with a `render` method for outputting the contents of our component. Inside, we can see the inclusion of a component `<AppHeader />` (taking on a property `hasUser`) and then a container element being wrapped around a bit of logic. What's happening here? 
 
-Lastly, we have our `/invites` route where we'll display our two lists (using a tab interface) of users who have requested invites and users who have been invited.
+First, notice that we're making two calls to `this.data` here. As we'll see soon, `this.data` is used to reference the value(s) returned by the `getMeteorData` method on our component. This method is given to us via a mixin called `ReactMeteorData`. Using `getMeteorData`, we can gain the reactive functionality familiar to us and share reactive data with the rest of our component via `this.data`. 
 
-Now that we have our routes in place, we need to add a few filters that will control who can access what routes when.
-
-#### Route Filters
-
-To make sure that we're keeping Urkelforce's users from going to route's that they shouldn't, we need to define a few filters and specify when and where those filters should apply.
-
-A filter is nothing more than a function with the specific purpose of checking against a rule and making a decision for where to send the user based on the result of that check. Let's look at our filter functions first, then look at how we need to turn them on.
-
-<p class="block-header">/client/routes/filters.coffee</p>
-
-```.lang-coffeescript
-checkUserLoggedIn = ->
-  if not Meteor.loggingIn() and not Meteor.user()
-    Router.go '/'
-  else
-    @next()
-
-userAuthenticatedBetaTester = ->
-  loggedInUser = Meteor.user()
-  isBetaTester = Roles.userIsInRole(loggedInUser, ['tester'])
-  if not Meteor.loggingIn() and isBetaTester
-    Router.go '/dashboard'
-  else
-    @next()
-
-userAuthenticatedAdmin = ->
-  loggedInUser = Meteor.user()
-  isAdmin      = Roles.userIsInRole(loggedInUser, ['admin'])
-  if not Meteor.loggingIn() and isAdmin
-    Router.go '/invites'
-  else
-    @next()
-```
-
-Each filter above is made up of a simple `if/else` statement. What we want to pay attention to for each is the _condition_ that we’re passing to the filter.
-
-Our first filter is to test whether or not a user is logged in. We use 	`if not Meteor.loggingIn() and not Meteor.user()` to check two things: whether Meteor is in the process of logging in a user or, if a user is already logged in.
-
-We’re doing this in the negative here (`not`) because if both are false (meaning there’s not a running login process and no logged in user), we want to send the user to `/`, or, our index route (i.e. Urkelforce’s beta signup form).
-
-Great! Now, let’s look it our last two filters `userAuthenticatedBetaTester` and `userAuthenticatedAdmin`. Both of these filter functions are identical except for the type of user we’re testing for and where we’re sending them. Let’s review our `userAuthenticatedBetaTester` filter and then assume the same process for our `userAuthenticatedAdmin` filter.
-
-Here, we introduce a new method `Roles.userIsInRole(loggedInUser, ['tester’])` set to a variable of `isBetaTester`. This method is provided by the roles package that we installed at the beginning of the recipe.
-
-This method takes our `loggedInUser` variable (set to `Meteor.user()`) and tests it against a single value array `[‘tester’]`.
-
-When it runs, this method says “look at the current user and see if they have a role of 'tester' applied to their account.” In this instance, if the answer is “yes,” we send the user to our `/dashboard` route.
-
-We’re doing the same thing in our last filter instead testing for an `admin` user type and sending any user that’s a positive match to `/invites`.
-
-Now that we’ve defined our functions, let’s take a look at how we actually _apply_ them to specific routes.
-
-<p class="block-header">/client/routes/filters.coffee</p>
-
-```.lang-coffeescript
-Router.onBeforeAction checkUserLoggedIn, except: [
-  'index',
-  'signup',
-  'signup/:token',
-  'login',
-  'recover-password',
-  'reset-password'
-]
-
-Router.onBeforeAction userAuthenticatedBetaTester, only: [
-  'index',
-  'signup',
-  'signup/:token',
-  'login',
-  'recover-password',
-  'reset-password',
-  'invites'
-]
-
-Router.onBeforeAction userAuthenticatedAdmin, only: [
-  'index',
-  'signup',
-  'signup/:token',
-  'login',
-  'recover-password',
-  'reset-password'
-]
-```
-
-Here, we’re making use of `iron:router`’s `onBeforeAction` method in a _global_ sense. You’ll notice that when we defined our public and authenticated routers earlier, we used `onBeforeAction` on a _per route_ basis. The difference here is that we’re telling Iron Router to apply these filter functions to _all_ routes. There are a lot of different applications for this, but one that’s particularly handy is checking whether or not to send a user to a specific route.
-
-Looking at our second call to `Router.onBeforeAction`, we’re passing our `userAuthenticatedBetaTester` filter function along with an `only` key that holds an array of strings. The strings in this array are the _only_ routes we want this function be applied to, meaning, the function _will not_ run on any route that isn’t in this list.
-
-Nifty, eh? We can see the reverse of the `only` option `except` being used above, telling Iron Router to apply our `checkUserLoggedIn` filter on _all_ routes _except_ for the given list.
-
-All right! Our routes are all set up. Next, we’re going to jump into controllers for our templates.
+For our header, we want to pipe in whether or not there's a current user. Why? Well, if there is, we'll want our header to render one set of menu items for authenticated users, and if not, our "public" menu items. Passing this as a property here, we can handle all of the authentication in our `App` component, but still take advantage of it in the header. Neat!
 
 <div class="note">
-<h3>A quick note</h3>
-<p>We’re going to gloss over the actual templates a bit to save some time and focus just on the code that’s running behind the scenes. If you want to see everything together, make sure to <a href=“https://github.com/themeteorchef/adding-a-beta-invitation-system-to-your-meteor-application”>snag a copy of the source on GitHub</a> and poke around.</p>
+  <h3>Skipping The Navigation <i class="fa fa-warning"></i></h3>
+  <p>To save a bit of time, we'll be skipping an in-depth look at how our navigation component is working. Never fear, the full source is <a href="https://github.com/themeteorchef/adding-a-beta-invitation-system-to-your-meteor-application/tree/master/code/client/components/globals/header.jsx">available here on GitHub</a>. If you get stuck or something isn't clear, don't hesitate to ask a question in the comments!</p>
 </div>
 
-### Accepting Users
+The important part here is what's happening in the `.container` element. Here, we're trying to determine whether or not a user is being logged in. If they _are_, we make a call to `this.loading()`, a method we'll define next that displays our loading template. If _not_, we make a call to `this.getView()`, a method on our component that will determine which—if any—component we should be rendering here.
 
-With our routes in place we can start getting some data into the database and work toward issuing invites to users interested in joining the Urkelforce beta.
+<p class="block-header">/client/components/layouts/app.jsx</p>
 
-In our index template `/client/views/public/index.html` we have a field where user’s can enter an email address to register for the beta. What we want to do is take that email and create a “placeholder” for them, or in this case, an invite. We’ve already created a collection to store all of this data that you can find in `/collections/invites.coffee`.
-
-#### Index Controller
-
-Our index controller is where we’ll handle two things: validating our user’s email address and when valid, add the user to our beta list. To handle validation, we’re making use of the `themeteorchef:jquery-validation` package that’s included in the source for this recipe (not mentioned above).
-
-To get started, we first need to prevent the submission of our signup form so we can instead defer submission to our validation. (If this is confusing, hang tight. You’ll see how it works shortly.) On our template’s `events()` method:
-
-<p class="block-header">/client/controllers/public/index.coffee</p>
-
-```.lang-coffeescript
-Template.index.events(
-  'submit form': (e)->
-    e.preventDefault()
-)
+```javascript
+App = React.createClass({
+  [...]
+  loading() {
+    return <div className="loading"></div>;
+  },
+  getView() {
+    if ( this.data.canView() ) {
+      return this.props.yield;
+    } else {
+      return this.data.hasUser ? <Dashboard /> : <Login />;
+    }
+  },
+  render() {
+    return <div className="app-root">
+      <AppHeader hasUser={ this.data.hasUser } />
+      <div className="container">
+        { this.data.loggingIn ? this.loading() : this.getView() }
+      </div>
+    </div>;
+  }
+});
 ```
 
-Here, we’re simply saying when the form in our `index` template is submitted, don’t do anything. With our form submission deferred, we’ll make a call to our `validation()` method in our template’s `rendered` callback function. Let’s look at everything first and then step through it.
+Adding in these methods, we can see that the `loading()` method referenced as `this.loading()` in our `render` method simply returns an empty `<div></div>` element. This is by choice—it just renders a plain page while loading—and can be handled however you'd like; for example, you could display a spinner here. Up to you! The more important addition here is the `getView()` method. This is where our user's fate is decided. Inside, we make a call to `this.data.canView()` which we'll define next. This will determine whether or not the user is allowed to view the route they've requested. If they _are_, we simply return `this.props.yield` which corresponds to the component we passed to the `yield` property in our calls to `ReactLayout.render()`.
 
-<p class="block-header">/client/controllers/public/index.coffee</p>
+If the user is _not_ allowed to view the requested route, we make another check to see if there is a current user. If there is, we simply render the `<Dashboard />` component for them—this is the default for non-admin, logged-in users—and if there isn't, we display the `<Login />` component. Simple as that! To make sense of all this, let's take a look at the pieces behind `this.data`.
 
-```.lang-coffeescript
-Template.index.rendered = ->
-  $('#request-beta-invite').validate(
-    rules:
-      emailAddress:
-        email: true
-        required: true
-    messages:
-      emailAddress:
-        email: "Please use a valid email address."
-        required: "An email address is required to get your invite."
-    submitHandler: ->
-      # Code to run after form is valid.
-  )
+<p class="block-header">/client/components/layouts/app.jsx</p>
+
+```javascript
+App = React.createClass({
+  mixins: [ ReactMeteorData ],
+  getMeteorData() {
+    return {
+      loggingIn: Meteor.loggingIn(),
+      hasUser: !!Meteor.user(),
+      currentUser: Meteor.user(),
+      isPublic( route ) {
+        let publicRoutes = [ 'login', 'signup', 'index' ];
+        return publicRoutes.indexOf( route ) > -1;
+      },
+      isAdmin( route ) {
+        let adminRoutes = [ 'invites' ];
+        return adminRoutes.indexOf( route ) > -1;
+      },
+      canView() {
+        let currentRoute = FlowRouter.current().route.name,
+            isPublic     = this.isPublic( currentRoute ),
+            isAdmin      = this.isAdmin( currentRoute ),
+            userIsAdmin  = Roles.userIsInRole( Meteor.userId(), 'admin' );
+
+        if ( isAdmin && !userIsAdmin ) {
+          return false;
+        } else {
+          return isPublic || !!Meteor.user();
+        }
+      }
+    };
+  },
+  loading() {
+    return <div className="loading"></div>;
+  },
+  getView() {
+    if ( this.data.canView() ) {
+      return this.props.yield;
+    } else {
+      return this.data.hasUser ? <Dashboard /> : <Login />;
+    }
+  },
+  render() {
+    return <div className="app-root">
+      <AppHeader hasUser={ this.data.hasUser } />
+      <div className="container">
+        { this.data.loggingIn ? this.loading() : this.getView() }
+      </div>
+    </div>;
+  }
+});
 ```
 
-A few things going on here. First, we attach our `validate()` method to our form using `$(‘#request-beta-invite').validate()`. With this in place, we pass three settings to the method: `rules`, `messages`, and `submitHandler`. In our first two settings, we specify the name of the field we’d like to “validate” along with the rules we’d like to use. Here we’re saying that an email must be entered and that we want the user to enter a valid email address (i.e. not a bunch of gibberish).
+Don't give up! This is actually pretty easy. Remember, in order to get access to the reactive `getMeteorData` method, we need to add the `ReactMeteorData` mixin which we're doing up top. Next, we define our `getMeteorData` method and return a big ol' object from it. What the heck is happening here? This is like the security checkpoint at the airport. Here, we have all of the radar detectors and other rights-violating—not really, but what a visual, eh?—equipment we need to determine whether or not our users can see what they're requesting.
 
-The messages setting here simply takes the rules we’ve setup in the `rules` block and gives us the option to set error messages that will display if the validation fails.
+The import one, `canView()` does the bulk of the work. Here, we grab the current route's name and perform a few checks. First, we test whether or not the current route is a public route, then we test whether it's an admin route, and the finally, we check whether the current user is an administrator. Using these checks, then, we respond to the question "can our user view this?" 
 
-Finally, we set a callback function in the `submitHandler` setting where we’ll actually run our code when our form is “valid.” Let’s look at what we’re doing after the form is validated.
+If the route is for admins only and the user is _not_ and admin, we respond in the negative with `false`, meaning, "nope, get them outta here!" If the route is _not_ an admin route—and our user is not an admin—we attempt to return whether the route is public (if it is, anybody can see it) or, if there's a logged in user (meaning the route is for logged in, non-admin users). Woof!
 
-<p class="block-header">/client/controllers/public/index.coffee</p>
+Take your time with this part as it's crucial to controlling how users move through our application. The important thing to remember: `getMeteorData` is reactive, meaning, `this.data` will update in response to changes to any reactive data source (e.g. `Meteor.user()`). For example, if a user is logged in and then logs out, the value `this.data.currentUser` will become `null` because there is no longer a user. We can use this reactivity to our advantage within our component to control what a user sees based on their behavior.
 
-```.lang-coffeescript
-invitee =
-  email: $('[name="emailAddress"]').val().toLowerCase()
-  invited: false
-  requested: ( new Date() ).getTime()
+Though it may not seem like much, this gives us a solid foundation for handling our authentication flow! Next up, we need to start fleshing out the components we were rendering on each route. First up, we're going to look at the sign up page where users can request invitations.
 
-  Meteor.call 'addToInvitesList', invitee, (error,response) ->
-    if error
-      alert error.reason
-    else
-      alert "Invite requested. We'll be in touch soon. Thanks for your interest in Urkelforce!"
+### Adding a collection for invites
+
+With our routes in place we can start getting some data into the database and work toward issuing invites to users interested in joining the Urkelforce beta. Let's start by defining a collection to store our invites in.
+
+<p class="block-header">/collections/invites.js</p>
+
+```javascript
+Invites = new Meteor.Collection( 'invites' );
+
+Invites.allow({
+  insert: () => false,
+  update: () => false,
+  remove: () => false
+});
+
+Invites.deny({
+  insert: () => true,
+  update: () => true,
+  remove: () => true
+});
+
+let InvitesSchema = new SimpleSchema({
+  "email": {
+    type: String,
+    label: "Email address of the person requesting the invite."
+  },
+  "invited": {
+    type: Boolean,
+    label: "Has this person been invited yet?"
+  },
+  "requested": {
+    type: String,
+    label: "The date this invite was requested."
+  },
+  "token": {
+    type: String,
+    label: "The token for this invitation.",
+    optional: true
+  },
+  "accountCreated": {
+    type: Boolean,
+    label: "Has this invitation been accepted by a user?",
+    optional: true
+  },
+  "dateInvited": {
+    type: String,
+    label: "The date this user was invited",
+    optional: true
+  },
+  "inviteNumber": {
+    type: Number,
+    label: "This invitation's position in the queue."
+  }
+});
+
+Invites.attachSchema( InvitesSchema );
 ```
 
-This is pretty straightforward. We’re using jQuery to get the value our user has passed to the `[name=“emailAddress”]` field (converting the value to lowercase to prevent getting a mixed case value from the user) and then setting two additional values `invited: false` and `requested: ( new Date() ).getTime()`. The `invited: false` key/value is saying that our user has _not_ been invited yet. We’re going to make use of this later on to determine which list our invite should show up on.
+Pretty basic. Here, we define our collection as `Invites` and then lock down our allow/deny rules on the client for [some better security](https://themeteorchef.com/blog/securing-meteor-applications). Once we have that in place, we [define a schema](https://themeteorchef.com/snippets/using-the-collection2-package) for our collection to control what properties we expect—along with their types—each object we insert into the collection to have. That's it! This is all pretty simple, but helpful for keeping our data consistent in the database. With this in place, we can start to wire up our `<Index />` component for accepting invitations.
 
-To make things easier on admins, we pass a Unix timestamp for the current time (when the form is actually submitted) using the `( new Date() ).getTime()` method.
+### Adding the index page
+Brace yourself. To get our `<Index />` component set up, we're going to be relying pretty heavily on React's ability to nest components. If you're just getting started with React, this will look scary. While we won't cover _every_ detail, we'll try to explain the high-level concepts so it's—roughly—clear what's happening and why.
+
+<p class="block-header">/client/components/public/index.js</p>
+
+```javascript
+Index = React.createClass({
+  [...]
+  render() {
+    return <div classNameName="index">
+      <PageHeader label="Request an Invite to Urkelforce" />
+      <Image
+        className="urkel-gif"
+        src="http://media.giphy.com/media/TaFTuXWTJf2iA/giphy.gif"
+        alt="Steve Urkel making faces."
+      />
+      <p>Urkelforce is a super secret app that's launching soon! Type in your email below to get on the beta list.</p>
+      <Form ref="requestForm" id="request-beta-invite" className="email-form" onSubmit={ this.handleSubmit }>
+        <Input
+          ref="emailAddress"
+          type="email"
+          name="emailAddress"
+          className="form-control"
+          placeholder="e.g. beatrix@beta.com"
+        />
+        <Button type="submit" buttonStyle="success" label="Request Beta Invite" />
+      </Form>
+    </div>;
+  }
+});
+```
+Ahhh f*?!*>g React. No! This may look pretty alien, but rest assured this all has a purpose. First, let's talk about what's happening in a general sense here. With React, the idea is to compose our interface out of reusable components. When we say component, we mean everything from a single element on a page like a button, up to an entire view. The trick with React is learning to identify when and where to break a piece of your interface off into a new component.
+
+Here, we're [going whole hog](https://youtu.be/-LCsiWL6gn0?t=2m18s) with components. Notice that our entire `<Index />` component is made up of _other_ components. The idea, here, is that we don't want to repeat the same markup over, and over, and over, like we might with a template. Instead, we define a component that specifies our markup _once_ and then create instances of that component, "injecting" properties into it.
+
+The simplest example here is our `<PageHeader />` component, so let's take a peek at the source for that real quick.
+
+<p class="block-header">/client/components/ui/page-header.jsx</p>
+
+```javascript
+PageHeader = React.createClass({
+  render() {
+    return <h4 className="page-header">{ this.props.label }</h4>;
+  }
+});
+```
+
+See what's happening here? Up in our `<Index />` component, we're calling our `<PageHeader />` component with a property `label` and passing it a string. When React goes to render that component, it's looking at the above code. Notice that we're asking for the `label` prop with `this.props.label` inside of our render method. This is doing exactly what you'd expect: rendering the string we passed inside the component. Using our example, a rendered version of this would look something like `<h4 className="page-header">Request an Invite to Urkelforce</h4>`. Making sense? We repeat this same pattern again and again, always trying to narrow down our interface into reusable components.
+
+> [H]ow do you know what should be its own component? Just use the same techniques for deciding if you should create a new function or object. One such technique is the single responsibility principle, that is, a component should ideally only do one thing. If it ends up growing, it should be decomposed into smaller subcomponents.
+>
+> &mdash; [Thinking in React](http://facebook.github.io/react/docs/thinking-in-react.html) via React
+
+Pretty simple, but mildly confusing at first. Why would we want to do this beyond reusability? Clarity. Although our recipe is pretty simple _now_, remember that the team at Urkelforce wants to be able to maintain this later. By implementing our interface using a series of components, we're making it easier for them to come back and reason through our work later. This is where React shines. It makes it very easy to understand what a component is responsible for. This isn't _law_, per se, but a strict recommendation. You could theoretically drop an entire HTML page into your render method and it will work. The point, though, is to avoid having to do that.
+
+Applying this concept to the rest of our components here, we can see that all we're really doing is passing props over to the components we've defined and letting React take care of the rendering. While we _could_ step through every single component being defined here, it would get pretty nauseating quick. Instead, it's recommended that you play with [the components in the source for this recipe](https://github.com/themeteorchef/adding-a-beta-invitation-system-to-your-meteor-application/tree/master/code/client/components). Tweak them. Pass funky properties to them. Break stuff! 
+
+React is a complete paradigm shift and requires a fair amount of tinkering to understand (speaking from experience as I just didn't "get it" the first few times). Once you get it, though, you'll be glad you took the time to appreciate the approach it suggests. Consider this app your sandbox! Okay, enough rambling....
+
+So. The part that we care about here is the `<Form />` component. This is where we're grabbing the user's email address and then using it to create their invitation. Two parts to pay attention to here: the `ref` property on the component `"requestForm"` and the `onSubmit` property. Together, we can use these to both reference our form and grab values from it to send up to the server. Let's update our `<Index />` component a bit to include a couple more methods.
+
+<p class="block-header">/client/components/public/index.jsx</p>
+
+```javascript
+Index = React.createClass({
+  componentDidMount() {
+    let refs = this.refs,
+        form = React.findDOMNode( refs.requestForm );
+
+    $( form ).validate({
+      rules: {
+        emailAddress: { required: true, email: true }
+      },
+      submitHandler() {
+        let email = React.findDOMNode( refs.emailAddress );
+
+        Meteor.call( 'addToInvitesList', email.value, ( error ) => {
+          if ( error ) {
+            alert( error.reason );
+          } else {
+            email.value = "";
+            alert( 'Invite requested. We\'ll be in touch soon. Thanks for your interest in Urkelforce!' );
+          }
+        });
+      }
+    });
+  },
+  handleSubmit( event ) {
+    event.preventDefault();
+  },
+  render() {
+    return <div classNameName="index">
+      [...]
+      <Form ref="requestForm" id="request-beta-invite" className="email-form" onSubmit={ this.handleSubmit }>
+        <Input
+          ref="emailAddress"
+          type="email"
+          name="emailAddress"
+          className="form-control"
+          placeholder="e.g. beatrix@beta.com"
+        />
+      <Button type="submit" buttonStyle="success" label="Request Beta Invite" />
+      </Form>
+    </div>;
+  }
+});
+```
+
+This is where React starts to get a little stickier. Here, we've added two methods: `componentDidMount` and `handleSubmit`. The first is known as a "lifecycle method" and is built-in to React. This method gets fired immediately after the component's render method has completed (meaning the component has been rendered on screen). This is analagous to Meteor's `onRendered` method in Blaze. 
+
+Inside, we're taking advantage of a new concept introduced by React: refs. Refs—React-slang for "refrences"—point to different elements in the current component. Remember just a little bit ago, we added a `ref` property to our `<Form />` component, as well as the `<Input />` element it contains. In the context of our `<Index />` component, we can access these with `this.refs.requestForm` and `this.refs.emailAddress`.
+
+The tricky part with this is figuring out why we're doing it. With React, the goal is to isolate DOM selection and manipulation to the component, and more specifically, to React itself. Usage of tools like jQuery for DOM selection, while perfectly functional, are frowned upon. As an alternative, we can use refs which point to the virtual DOM elements created for us by React.
+
+To interact with those elements (e.g. getting a reference to their _actual_ markup), we can use refs. Inside of our `componentDidMount()` method we can see this taking place. First, we grab the DOM node corresponding to our rendered `<Form />` component using the `React.findDOMNode()` method, passing in the _ref_ to our requestForm. Huh? Look back at the `<Form />` component's `ref` property. See how it's set to `"requestForm"`? This is the connection.
+
+Using this, we access the form element in the DOM. [Going against the grain](https://youtu.be/L397TWLwrUU?t=1m16s) ever so slightly, we make a call to the validate method given to us by the [jQuery validation](http://jqueryvalidation.org/) library included with [Base](https://themeteorchef.com/base/packages-included/). Why? To be blunt: validation in React is a bummer. There are not a lot of clear patterns for it yet and the one's that do exist are...well, written by total nerds. In translation, they're a bit more confusing than seems necessary. The solution here works just fine, but take it with a grain of salt.
+
+Notice that all we're doing here is validating that our email input has a value (the jQuery validation library is silently doing this via the `name` attribute/prop on our `<Input />` component) and that it's a valid email address. After we've confirmed that, we handle our submit using the `submitHandler` method from the validation library and make a call to add our prospective user's email to our list.
+
+Real quick, we should call out why we're _not_ doing this in the `handleSubmit()` method of our component. Unfortunately, without this, our validation won't technically work (meaning, it won't block the form submission). The validation will fire, but so too will the `handleSubmit` method. This is because we're binding our call to this on our `<Form />` component directly via the prop `onSubmit`. Even though we're attaching our form validation—which would prevent submission of a non-React element just fine—here, we're not so lucky. To get around this issue, we just rely on the `submitHandler` callback of our validation.
 
 <div class="note">
-  <h3>A quick note</h3>
-  <p>Heads up! After this recipe was published, I added an email validation step before calling to the addToInviteesList method on the server. This was added to prevent too many emails bouncing on the demo. The code is visible in <a href="https://github.com/themeteorchef/adding-a-beta-invitation-system-to-your-meteor-application">the master branch on GitHub</a>, but I haven't outlined it here. A similar technique was used in <a href="https://github.com/themeteorchef/roll-your-own-authentication">Recipe #3</a>, so make sure to check it out to see how it's implemented. Note: this update also adds a dependency for the http package (used for the validation on the server).</p>
+  <h3>To validate, or not. That is the question. <i class="fa fa-warning"></i></h3>
+  <p>This solution isn't entirely necessary. Some people prefer client-side validaiton, others may not. In the context of React, it's a bit of a toss up at this point. In theory, you could skip the client-side validation and leave it all up to the server (tossing errors back to the client accordingly). It all comes down to your user experience preferences/needs.</p>
 </div>
 
-Next, we take all of this and pass it to a method call `addToInvitesList` that we’ll define on the server next. If the method fails or succeeds, we’ll display a popup alert to the user with a message to let them know what’s going on.
+Okay, so. Now we're ready to create our invite. Notice that before we send everything to the server, we again rely on the refs concept to pull the value of our `emailAddress` input. This is pretty similar to calling something like `template.find( '<element>' ).value` in Blaze. Instead of relying on the template instance, though, we're focusing on the component instance. It's funky at first, but you'll get used to it. Once we have the value, we toss it up to the server to create our invite. Finally! Let's take a look.
 
-Let’s pop over to the server and see how this all ties together.
+#### Creating invites on the server
+Fortunately, the actual code to handle the creation of our invite is pretty simple. Let's take a peek at the method now and then explain it quick.
 
-#### Adding Invites On the Server
+<p class="block-header">/server/methods/insert/invites.jsx</p>
 
-On the server recall that we need to define a method called `addToInvitesList` that actually inserts our user’s invite request into the database. Here’s how that looks:
+```javascript
+Meteor.methods({
+  addToInvitesList( email ) {
+    check( email, String );
 
-<p class="block-header">/server/data/insert/invites.coffee</p>
+    let emailExists = Invites.findOne( { email: email } ),
+        inviteCount = Invites.find( {}, { fields: { _id: 1 } } ).count();
 
-```.lang-coffeescript
-Meteor.methods(
-
-  addToInvitesList: (invitee) ->
-    check(invitee, {email: String, requested: Number, invited: Boolean})
-
-    emailExists = Invites.findOne({“email": newInvitee})
-
-    if emailExists
-      throw new Meteor.Error "email-exists", "It looks like you've already signed up for our beta. Thanks!"
-    else
-      inviteCount = Invites.find({},{fields: {"_id": 1}}).count()
-      invitee.inviteNumber = inviteCount + 1
-
-      Invites.insert(invitee, (error)->
-        console.log error if error
-      )
-)
+    if ( !emailExists ) {
+      return Invites.insert({
+        email: email,
+        invited: false,
+        requested: ( new Date() ).toISOString(),
+        token: Random.hexString( 15 ),
+        accountCreated: false,
+        inviteNumber: inviteCount + 1
+      });
+    } else {
+      throw new Meteor.Error( 'already-invited', 'Sorry, it looks like you\'ve already requested an invite! Hang tight :)' );
+    }
+  }
+});
 ```
 
-First, we make sure to make use of Meteor's [`check`](http://docs.meteor.com/#/full/check_package) package to ensure that the data we’re getting from the client is what we actually want. You might recall that we did this in our first recipe, [Exporting Data From Your Meteor Application](http://themeteorchef.com/recipes/exporting-data-from-your-meteor-application/).
+Ahh, a whiff of simplicity. We don't have too much going on here. First, we take in our email from the client and [use check](https://themeteorchef.com/snippets/using-the-check-package/) to make sure that it's a `String` type. Next, we do a quick spot of verification to make sure that our prospective user isn't double dipping with a `findOne`. If we _do_ find that user in the invites list already, we toss an error back to the client letting the user know to be patient. If they _don't_ exist, though, we go ahead and insert a new invite for them in the database. 
 
-Now we take our `invitee.email` value and pass it to a `findOne` call on our `Invites` collection. Setting this to a variable `emailExists`, we use it in an if/else statement that throws an error that will be sent back to the client if the email is found, and if not (it’s unique), insert the user into the database.
+Two things to point out here. First, notice that to create the user's token, we're relying on the `random` package's `hexString()` method. Additionally, we set the user's `inviteNumber` (the total number of invites requested so far plus one). With this in place, our user has been invited! Back on the client, we let them know that they're all signed up in the callback of our `Meteor.call()` block. Boom!
 
-Notice that we’ve added two lines of code for checking how many users currently exist in our beta and then incrementing that number by one, adding it to the invite before insert it into the database. This is entirely optional, but it's a nice way to identify the order in which invites have come in (e.g. if you want to invite older requests first).
+Phew. This is a burner. Don't worry, it will all be worth it when we're done!
 
-Blammo! We can officially take emails from interested users on our index page and add them to our “invites list.” In the next part of this recipe, we’ll look at approving invitations, sending an email to the user, and getting their account created using a beta token!
+Next up, we need to create a way for us to review and send out invitations. Let's get started by creating a new component and wiring up our data from the database. Same rules apply, there are quite a few components being spun up, so we'll explain the crazier ones and skip the browsable items to save us some time.
+
+### Displaying and sending invites
+Okay! At this point, we've got our users requesting invites. What we want now, however—per our client's request—is to be able to see a list of invites and then selectively invite users one at a time. To get started, let's wire up a new component `<InvitesList />` to display everything.
+
+<p class="block-header">/client/components/authenticated/invites.jsx</p>
+
+```javascript
+InvitesList = React.createClass({
+  [...]
+  render() {
+    return <div className="invites">
+      <PageHeader label="Invites" />
+      <NavTabs context="invite-tabs" tabs={ this.tabs } />
+      <TabContent context="invite-tabs" tabs={ this.tabs }>
+        <TabPanel active={ true } id="open-invitations">
+          <Table context="open-invitations" columns={ this.data.openInvitations.columns }>
+            { this.data.openInvitations.data.map( ( invite ) => {
+              return <OpenInvitation key={ invite._id } invite={ invite } />;
+            })}
+          </Table>
+        </TabPanel>
+        <TabPanel active={ false } id="closed-invitations">
+          <Table context="closed-invitations" columns={ this.data.closedInvitations.columns }>
+            { this.data.closedInvitations.data.map( ( invite ) => {
+              return <ClosedInvitation key={ invite._id } invite={ invite } />;
+            })}
+          </Table>
+        </TabPanel>
+      </TabContent>
+    </div>;
+  }
+});
+```
+
+Don't freak out! Remember, all that's happening here is we're splitting up our interface into as many reusable components as possible. Here, the core part of what we're doing is creating a tabbed interface that will allow us to display two lists: uninvited users and invited users. Like this:
+
+<figure>
+  <img src="https://tmc-post-content.s3.amazonaws.com/urkelforce-invites-list.gif" alt="Switching between open and closed invite tabs.">
+  <figcaption>Switching between open and closed invite tabs.</figcaption>
+</figure>
+
+To do this, we want to create a few reusable components. Namely, we've set up three to handle our tabbing system: `<NavTabs />`, `<TabContent />`, and `<TabPanel />`. Real quick, let's spit out all three of these components and talk about the more confusing parts.
+
+<p class="block-header">/client/components/ui/nav-tabs.jsx</p>
+
+```javascript
+NavTabs = React.createClass({
+  render() {
+    return <ul className="nav nav-tabs" role="tablist">
+      { this.props.tabs.map( ( tab, index ) => {
+        return <li key={ `${this.props.context}_${index}` } role="presentation" className={ tab.active ? 'active' : '' }>
+          <a href={ tab.content } role="tab" data-toggle="tab">{ tab.label }</a>
+        </li>;
+      })}
+    </ul>;
+  }
+});
+```
+
+<p class="block-header">/client/components/ui/tab-content.jsx</p>
+
+```javascript
+TabContent = React.createClass({
+  render() {
+    return <div className="tab-content">
+      { this.props.children }
+    </div>;
+  }
+});
+```
+
+<p class="block-header">/client/components/ui/tab-panel.jsx</p>
+
+```javascript
+TabPanel = React.createClass({
+  render() {
+    let classes = this.props.active ? 'tab-pane active' : 'tab-pane';
+
+    return <div role="tabpanel" className={ classes } id={ this.props.id }>
+      { this.props.children }
+    </div>;
+  }
+});
+```
+
+First, notice that aside from our `<NavTabs />` component, our other components are using the `this.props.children` convention. If this is unfamiliar, what's happening here is that whenever we call our component as a "wrapper," we're grabbing everything that it's wrapping. To make that a little clearer:
+
+```javascript
+<TabPanel active={ true } id="open-invitations">
+  <p>This is a child of TabPanel.</p>
+  <h3>This is another child of TabPanel.</h3>
+</TabPanel>
+```
+
+In this example, notice that everything wrapped by the `<TabPanel /></TabPanel>` component is considered a child _of_ that component. By calling `{this.props.children}` inside of the component's definition, we're saying "give us everything this instance of the component is wrapping." In this case, then, we'd be saying output the `<p></p>` tag and `<h3></h3>` tag this is wrapping. Making sense? Using this technique, we can create "wrapper" components whose sole purpose is to give some sort of styling or context to whatever it's containing.
+
+Back up top, notice that to handle our tabs we're making use of a call to `map()` inside of our JSX. What we're doing here is outputting a new tab element for each one passed via `this.props.tabs`. If we look back at our `<ListItems />` component, we can see our `<NavTabs />` component taking on a `tabs` prop. For each item passed here, we simply spit out an `li` tag, making sure to set a key—this is [a React thing](https://facebook.github.io/react/docs/multiple-components.html#dynamic-children)—and then pipe in the values via props accordingly.
+
+Cool! What's nice about this setup is that we don't have to add any events to toggle our tabs because we're getting this for free from Bootstrap. If we were building our own system, though, we'd want to map this functionality via the `onClick` method of each of our tabs. With these up and running, let's zip back up to our `<ListItems />` component and talk about how we're actually outputting items.
+
+<p class="block-header">/client/components/authenticated/invites.jsx</p>
+
+```javascript
+InvitesList = React.createClass({
+  [...]
+  render() {
+    return <div className="invites">
+      <PageHeader label="Invites" />
+      <NavTabs context="invite-tabs" tabs={ this.tabs } />
+      <TabContent context="invite-tabs" tabs={ this.tabs }>
+        <TabPanel active={ true } id="open-invitations">
+          <Table context="open-invitations" columns={ this.data.openInvitations.columns }>
+            { this.data.openInvitations.data.map( ( invite ) => {
+              return <OpenInvitation key={ invite._id } invite={ invite } />;
+            })}
+          </Table>
+        </TabPanel>
+        <TabPanel active={ false } id="closed-invitations">
+          <Table context="closed-invitations" columns={ this.data.closedInvitations.columns }>
+            { this.data.closedInvitations.data.map( ( invite ) => {
+              return <ClosedInvitation key={ invite._id } invite={ invite } />;
+            })}
+          </Table>
+        </TabPanel>
+      </TabContent>
+    </div>;
+  }
+});
+```
+
+Notice that here, we're also using two `.map()` loops to output our data: one for `openInvitations` and one for `closedInvitations`. For each, we're outputting another component—surprise—which will take in the invite data and display it accordingly. We're doing this as two separate components here because each one will have a slightly different structure. If you're feeling extra dorky you can refactor this even further, but as-it-stands it won't hurt you. So...how is that data piping in?
+
+<p class="block-header">/client/components/authenticated/invites.jsx</p>
+
+```javascript
+InvitesList = React.createClass({
+  mixins: [ ReactMeteorData ],
+  getMeteorData() {
+    Meteor.subscribe( 'invites-list' );
+
+    return {
+      currentUser: Meteor.user(),
+      openInvitations: {
+        columns: [
+          { width: '5%', label: '', className: '' },
+          { width: '53%', label: 'Email Address', className: '' },
+          { width: '20%', label: 'Date Requested', className: 'text-center' },
+          { width: '20%', label: 'Send Invitation', className: 'text-center' }
+        ],
+        data: Invites.find( { invited: false }, { sort: { inviteNumber: 1 } } ).fetch()
+      },
+      closedInvitations: {
+        columns: [
+          { width: '5%',  label: '', className: '' },
+          { width: '40%', label: 'Email Address', className: '' },
+          { width: '20%', label: 'Date Invited', className: 'text-center' },
+          { width: '15%', label: 'Invite Token', className: 'text-center' },
+          { width: '20%', label: 'Accepted?', className: 'text-center' }
+        ],
+        data: Invites.find( { invited: true }, { sort: { dateInvited: -1 } } ).fetch()
+      }
+    };
+  },
+  tabs: [
+    { content: '#open-invitations', label: 'Open', active: true },
+    { content: '#closed-invitations', label: 'Closed', active: false }
+  ],
+  render() {
+    return <div className="invites">
+      <PageHeader label="Invites" />
+      <NavTabs context="invite-tabs" tabs={ this.tabs } />
+      <TabContent context="invite-tabs" tabs={ this.tabs }>
+        <TabPanel active={ true } id="open-invitations">
+          <Table context="open-invitations" columns={ this.data.openInvitations.columns }>
+            { this.data.openInvitations.data.map( ( invite ) => {
+              return <OpenInvitation key={ invite._id } invite={ invite } />;
+            })}
+          </Table>
+        </TabPanel>
+        <TabPanel active={ false } id="closed-invitations">
+          <Table context="closed-invitations" columns={ this.data.closedInvitations.columns }>
+            { this.data.closedInvitations.data.map( ( invite ) => {
+              return <ClosedInvitation key={ invite._id } invite={ invite } />;
+            })}
+          </Table>
+        </TabPanel>
+      </TabContent>
+    </div>;
+  }
+});
+```
+
+Well, yeah...okay, but...what in the hell?! This is React. Remember, in addition to using reusable components, the other big tenet of React is that _parents are responsible for passing properties to their children_. Said another way, the component that is including the sub-component is responsible for telling that component what it should display. In our case, we have three big things we're telling other components to display here. 
+
+1. The `<NavTabs />` component is being told which tabs to display by telling it to look at the `tabs` property of our component via `this.tabs`.
+2. Our `<Table />` components are being told which columns to render via the `openInvitations.columns` and `closedInvitations.columns` properties returned by `this.data`.
+3. Our calls to `map()` are being told what data to loop over (and render as either `<OpenInvitation />` or `<ClosedInvitation />` compoments) by the `data` property set on `this.data.openInvitations.data` and `this.data.closedInvitations.data`.
+
+Let that all soak in as it's a bit heady. Again, all we're doing here is telling our nested components what data to render. That's it. The syntax is a bit new and weird, but this is very similar to what Meteor does with Blaze. For example, our call to `this.data.openInvitations.data.map()` is comparable to something like: 
+
+```handlebars
+{{#each openInvitations}}
+  {{> Template.dynamic template="OpenInvitation" data=this}}
+{{/each}}
+```
+
+Seeing the parallels? The major difference between the two patterns is that with React, we keep all of our code in one place (as opposed to separate files). Again, let that soak in. What React is doing is really neat and encouraging us to have much cleaner interfaces. It may not seem like it at first, but a lot of the conventions introduced here will help you to develop better organizational habits. Damn you, Zuckerberg!
+
+One more thing to point out: our subscription. Notice at the very top of our `getMeteorData` method, we're subscribing to a publication called `invites-list`. Let's take a peek at that real quick.
+
+<p class="block-header">/server/publications/invites-list.js</p>
+
+```javascript
+Meteor.publish( 'invites-list', function() {
+  if ( Roles.userIsInRole( this.userId, 'admin' ) ) {
+    return Invites.find();
+  }
+});
+```
+
+Pretty simple, but notice that we're doing something special. Here, we're taking into account that we'll be separating our users into two batches later on: `testers` and `admins`. Because our invites list contains sensitive user data, we use a call to `Roles.userIsInRole()` from the `alanning:roles` package we installed earlier, verifying that the current user `this.userId` is in the `admin` role. If they are, we return our invites data as expected. Note: this means that if someone was sneaky and found our `invites-list` subscription, they couldn't type `Meteor.subscribe( 'invites-list' );` in the console and get back our data! 
+
+Cool, so, at this point, we've got our data wired up and it's ouputting to our components. Next, we need to add a means for _sending_ invitations. Because we'll only be doing this on our open invitations, we're going to add the functionality to our `<OpenInvitation />` component. Remember, this is the one we were outputting in our loop over the `openInvitations.data` collection.
+
+<p class="block-header">/client/components/authenticated/open-invitation.jsx</p>
+
+```javascript
+OpenInvitation = React.createClass({
+  sendInvitation() {
+    if ( confirm( `Are you sure you want to invite ${ this.props.invite.email }?` ) ) {
+      Meteor.call( 'sendInvite', this.props.invite._id, ( error ) => {
+        if ( error ) {
+          alert( error.reason );
+        } else {
+          alert( 'Invite sent!' );
+        }
+      });
+    }
+  },
+  render() {
+    let invite = this.props.invite;
+
+    return <tr key={ invite._id }>
+      <td className="vertical-align"># { invite.inviteNumber }</td>
+      <td className="vertical-align">{ invite.email }</td>
+      <td className="text-center vertical-align">{ React.helpers.humanDate( invite.requested ) }</td>
+      <td className="text-center vertical-align">
+        <Button type="button" buttonStyle="success" label="Invite" onClick={ this.sendInvitation } />
+      </td>
+    </tr>;
+  }
+});
+```
+
+We're keeping it pretty simple here. Notice that all this component is doing is outputting a row for our table. Again, one job per component (if we can manage), breaking bigger components into sub-components like this one. Components. COMPONENTS. Components. Phew. Is your head spinning? Mine is. SO. Here, the part to pay attention to is the `<Button />` component and it's `onClick` property. Notice that this prop is making a call to `this.sendInvitation` which corresponds to a method on our component. Ah, ha!
+
+Up in that method, we're getting straight to the point by throwing a confirm dialog to make sure that our user definitely wants to send an invite. If they answer in the positive, we make a call to our `sendInvite` method on the server. Notice: we're passing our invitation's ID via the `invite` prop on the current instance of our `<OpenInvitation />` component. No way. _Yes way_. Remember, when we looped over our open invitations, we simply passed the current invitation as a prop on `<OpenInvitation />`. Inside of the component, then, we can access the entire invite and do as we please via `this.props.invite`. Here, we want the `_id` of our invite to use as a reference on the server. Let's hop over there now.
+
+<p class="block-header">/server/methods/update/invites.js</p>
+
+```javascript
+const urls = {
+  development: 'http://localhost:3000/signup/',
+  production: 'http://tmc-002-demo.meteor.com/signup/'
+};
+
+Meteor.methods({
+  sendInvite( inviteId ) {
+    check( inviteId, String );
+
+    let invite = Invites.findOne( { _id: inviteId } );
+
+    if ( invite ) {
+      SSR.compileTemplate( 'inviteEmail', Assets.getText( 'email/templates/invite.html' ) );
+
+      Email.send({
+        to: invite.email,
+        from: 'Urkelforce <demo@themeteorchef.com>',
+        subject: 'Welcome to Urkelforce!',
+        html: SSR.render( 'inviteEmail', {
+          url: urls[ process.env.NODE_ENV ] + invite.token
+        })
+      });
+
+      Invites.update( invite._id, {
+        $set: {
+          invited: true,
+          dateInvited: ( new Date() ).toISOString()
+        } 
+      });
+    } else {
+      throw new Meteor.Error( 'not-found', 'Sorry, an invite with that ID could not be found.' );
+    }
+  }
+});
+```
+
+A little more wiley, but nothing too crazy. First, we check our `inviteId` from the client to make sure it's a string. Next, we quickly look up our invite to make sure it exists—it should, but just in case. If our invite exists, we use the `meteorhacks:ssr` package that's included with Base to compile a simple, [HTML email template](https://github.com/themeteorchef/adding-a-beta-invitation-system-to-your-meteor-application/blob/v2.0.0/code/private/email/templates/invite.html) we've defined for dispatching invites to our users. Here, we rely on the Meteor `Assets` API to get the text contents of our template, relative to the `/private` directory of our app (i.e. `/private/email/templates/invite.html`).
+
+Once our template is compiled, we make use of the `email` package we installed earlier, calling its `send()` method to fire off our email. Notice, to send our HTML email, we're setting a property  called `html` and passing it a call to `SSR.render()`. What's happening here is that the `ssr` package is taking the data we pass in the object in the second argument and attempting to map it to handlebars-style helpers in our template.
+
+In the template, we have a single helper `{{url}}` which is looking for the fully built URL that we'll link our users to for accepting their invite. Notice that when we set `url`, we're calling to an object defined at the top of our file called `urls` which contains a value for `development` and `production`. This makes it easy for us to switch between environments and still have our code work without a lot of fuss.
+
+Using the built in `process.env.NODE_ENV` value (this is given to us via Node.js, the lower-level system that Meteor runs on top of), we get the current environment our app is running in. On localhost, `process.env.NODE_ENV` is automatically set to `development` for us. In production, we can control this by [setting environment variables on our host](https://themeteorchef.com/recipes/deploying-to-modulus/#tmc-environment-variables). Generally speaking, this is already done for us, but keep an eye on it if you deploy this.
+
+Once our URL is built, we pipe it into our template to replace our `{{url}}` helper accordingly. Behind the scenes, the `ssr` package handles the replacement and conversion of our template into raw HTML, fit for sending off via email!
 
 <div class="note">
-<h3>A quick note</h3>
-<p>Take a break! Do your eyes hurt? Hopefully not. Seriously, though, get up and walk around or go get a snack before we keep going.</p>
+  <h3>Configuring Email <i class="fa fa-warning"></i></h3>
+  <p>In order for this to work, you will need to <a href="https://themeteorchef.com/snippets/using-the-email-package/#tmc-configuration">configure an SMTP provider</a> in your application. Without one, Meteor will simply output the message for your email to the server console.</p>
 </div>
 
-### Sending Invitations
+Once this is all set, we make sure to update our actual invitation, marking it as being invited, and setting the `dateInvited` property to the current date in the [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) format. Blammo! At this point, we've got our invites out the door and updated in our system. If we play around a bit with our app, we should see invites jumping from our "Open" tab to our "Closed" tab. Sweet!
 
-The halfway point! Now we get into some really fun stuff. The next thing we need to accomplish is actually _inviting_ users who have requested an invite. Let’s move over to the `/invites` route where we’ll handle processing our invitations.
+Last step is acepting invites. Let's get to it.
 
-Again, we’re going to skip going too far into our template and instead focus on its controller. A quick overview: we’ve split our invitations list into two templates: `/client/views/authenticated/open-invitations.html` and `/client/views/authenticated/closed-invitations.html`, both combined using a tab interface in `/client/views/authenticated/invites.html`.
+### Accepting invitations and creating users
+The grand finale! Right now, we've got all of the basic pieces in place to send invites _out_ to our users. What we want to do to close this loop is give our users a way to _accept_ those invitations. To do this, we're going to create a sign up form that carries the requirement of including a beta token. This will allow us to prevent random users from signing up, while also giving those we _do_ want the proper access. To start, let's whip up a component.
 
-Our templates are pretty standard, but we should call attention to one item: dates. Recall earlier that we installed a package mrt:moment that gave us access to the [moment.js](http://momentjs.com/) library. Both in our "open" invitations list and our "closed" invitations list, we display a date for each invite. A date for when the invite was requested and a date for when the invite was approved/sent, respectively.
+<p class="block-header">/client/components/public/signup.jsx</p>
 
-To make use of the moment package, we've created a template helper `{{epochToString <variable here>}}` that we can pass an epoch/Unix timestamp string to and have it spit out a human-readable string (e.g. instead of `1415983049` you get `Friday, November 14th, 2014`). Let's look at the code powering our helper quick:
-
-<p class="block-header">/client/helpers/helpers-ui.coffee</p>
-
-```.lang-coffeescript
-UI.registerHelper('epochToString', (timestamp) ->
-  moment.unix(timestamp / 1000).format("MMMM Do, YYYY")
-)
+```javascript
+Signup = React.createClass({
+  [...]
+  render() {
+    return <div className="signup">
+      <div className="row">
+        <div className="col-xs-12 col-sm-6 col-md-4">
+          <PageHeader label="Signup" />
+          <Form ref="signupForm" id="application-signup" className="signup" onSubmit={ this.handleSubmit }>
+            <FormGroup>
+              <Label name="emailAddress" label="Email Address" />
+              <Input ref="emailAddress" type="email" name="emailAddress" placeholder="Email Address" />
+            </FormGroup>
+            <FormGroup>
+              <Label name="password" label="Password" />
+              <Input ref="password" type="password" name="password" placeholder="Password" />
+            </FormGroup>
+            <FormGroup>
+              <Label name="betaToken" label="Beta Token" />
+              <Input ref="betaToken" type="text" name="betaToken" placeholder="Beta Token" value={ this.props.token } />
+            </FormGroup>
+            <FormGroup>
+              <Button type="submit" buttonStyle="success" label="Sign Up" />
+            </FormGroup>
+            <p>Already have an account? <a href="/login">Log In</a>.</p>
+          </Form>
+        </div>
+      </div>
+    </div>;
+  }
+});
 ```
 
-Here we're making use of spacebar's `UI.registerHelper` method to take the passed timestamp and convert it using moment. Notice that we're dividing our value by `1000` when we pass it to moment's `unix()` method. We do this because the number in our database is in _milliseconds_ whereas moment expects our time in _seconds_. Finally, we use moment's `format()` method to set a pattern for how we want our date to display. In this case we want the full month, day with prefix, and full year (e.g. `November 14th, 2014`).
+Pssh. Nothing we haven't seen at this point. Notice that we're starting to reap the benefits of using React: reusability. Save for our layout div's via Bootstrap, everything here has already been defined as a component. See the advantage? Without a lot of thought, we save a ton of repetition and speed up our workflow quite a bit. What's interesting is that we could technically refactor this _even further_. For example, here, we have an `emailAddress` input wrapped in a form group. This alone could be a new component called `<EmailAddress />`! 
 
-Because we've defined this a UI helper, we can now reuse our `{{epochToString <variable here>}}` template tag whenever we want to convert our unix string to readable text.
+The reality with React is that it takes some thinking, which is a good thing. By thinking carefully about how we add new elements (or break down existing ones), we make it that much easier to compose our interfaces. In dork-free terms, this means that we can move faster, cooperate easier with team members, and get home sooner. Win. Win. Win. Slow start, fast finish.
 
-Now, let’s look at the controller for our first tab where we load our list of “open” invitations, or, invitations that have been requested but not sent/approved.
+Okay, now that we have The React Way™ drilled into our heads, let's rap about this component. All we're doing here is creating a form for our users to fill out. The interesting part revolves around the `betaToken` input. Recall that way back when we set up our routes, we created a variation of our signup route `/signup/:token`. This is where we put it to use. Remember, we plucked that `:token` value out of our route and passed it into our `<Signup />` component via the prop `token`. See how we're making use of it?
 
-<p class="block-header">/client/controllers/authenticated/open-invitations.coffee</p>
+On our `betaToken` input, we make a call to `this.props.token`, passing it in as the default value of our input. This means that if the user visits `/signup/123456`, when the page loads, they'll see `123456` in the `betaToken` input field.
 
-```.lang-coffeescript
-Template.openInvitations.helpers(
-  hasInvites: ->
-    getInvites = Invites.find({invited: false}, {fields: "_id": 1, "invited": 1}).count()
-    if getInvites > 0 then true else false
+<figure>
+  <img src="https://tmc-post-content.s3.amazonaws.com/Screen-Shot-2015-12-02-02-39-22.png" alt="Example of our token being passed into the Beta Token input.">
+  <figcaption>Example of our token being passed into the Beta Token input.</figcaption>
+</figure>
 
-  invites: ->
-    Invites.find({invited: false}, {sort: {"requested": 1}}, {fields: {"_id": 1, "inviteNumber": 1, "requested": 1, "email": 1, "invited": 1}})
-)
+So cool! Now for the final step, getting the user signed up. To do it, we're going to take a cue from our `<Index />` component we set up earlier. Yes, this means a little bit of [hell raising](https://youtu.be/ki3TpFZY7cU?t=1m27s) and using a tiny dash of jQuery to help validate our form. You can send your complaints to:
+
+```text
+Facebook Headquarters 
+c/o Mark "Adissage" Zuckerberg
+1 Hacker Way 
+Menlo Park, CA 94025
 ```
 
-In the first part of our controller for our `openInvitations` template, we create two helpers to check for the existence of our data and then load it into the template. This is pretty bog standard, however, we should call attention to the parameter being passed to our `find()` method's in both helpers: `{invited: false}`.
+Let's wire this up. 
 
-Look familiar? This is where we make use of the `invited` key that we set earlier. This allows us to pull only the invites that _haven’t_ been sent yet. Nice! Note that we’re again making heavy use of the `fields` option on our `find()` so that we only pull in the data that we need.
+<p class="block-header">/client/components/public/signup.jsx</p>
 
-Cool, now, let’s see how we handle processing an invite. In our template, when we loop through our invites we add an “invite” button to each invite. In our controller, we wait for a click event on this to handle calling the method that will create a beta token for our user and send an invite email to them. Let’s take a look:
+```javascript
+Signup = React.createClass({
+  componentDidMount() {
+    let refs = this.refs,
+        form = React.findDOMNode( refs.signupForm );
 
-<p class="block-header">/client/controllers/authenticated/open-invitations.coffee</p>
+    $( form ).validate({
+      rules: {
+        emailAddress: { required: true, email: true },
+        password: { required: true },
+        betaToken: { required: true }
+      },
+      submitHandler() {
+        let password = React.findDOMNode( refs.password ).value,
+            user     = {
+              email: React.findDOMNode( refs.emailAddress ).value,
+              password: Accounts._hashPassword( password ),
+              betaToken: React.findDOMNode( refs.betaToken ).value
+            };
 
-```.lang-coffeescript
-Template.openInvitations.events(
-  'click .send-invite': ->
-    invitee =
-      id: this._id
-      email: this.email
-
-    url = window.location.origin + "/signup"
-
-    confirmInvite = confirm "Are you sure you want to invite #{this.email}?"
-
-    if confirmInvite
-      Meteor.call 'sendInvite', invitee, url, (error)->
-        if error
-          console.log error
-        else
-          alert "Invite sent to #{invitee.email}!"
-)
+        Meteor.call( 'validateBetaToken', user, ( error ) => {
+          if ( error ) {
+            alert( error.reason );
+          } else {
+            Meteor.loginWithPassword( user.email, password, ( error ) => {
+              if ( error ) {
+                alert( error.reason );
+              } else {
+                FlowRouter.go( '/dashboard' );
+              }
+            });
+          }
+        });
+      }
+    });
+  },
+  handleSubmit( event ) {
+    event.preventDefault();
+  },
+  render() {
+    return <div className="signup">
+      <div className="row">
+        <div className="col-xs-12 col-sm-6 col-md-4">
+          <PageHeader label="Signup" />
+          <Form ref="signupForm" id="application-signup" className="signup" onSubmit={ this.handleSubmit }>
+            <FormGroup>
+              <Label name="emailAddress" label="Email Address" />
+              <Input ref="emailAddress" type="email" name="emailAddress" placeholder="Email Address" />
+            </FormGroup>
+            <FormGroup>
+              <Label name="password" label="Password" />
+              <Input ref="password" type="password" name="password" placeholder="Password" />
+            </FormGroup>
+            <FormGroup>
+              <Label name="betaToken" label="Beta Token" />
+              <Input ref="betaToken" type="text" name="betaToken" placeholder="Beta Token" value={ this.props.token } />
+            </FormGroup>
+            <FormGroup>
+              <Button type="submit" buttonStyle="success" label="Sign Up" />
+            </FormGroup>
+            <p>Already have an account? <a href="/login">Log In</a>.</p>
+          </Form>
+        </div>
+      </div>
+    </div>;
+  }
+});
 ```
 
-Okay, so here we’re doing a couple of things a few things. First, we build out an object to send to the server with the `_id` and `email` of the user we’re inviting. What’s unique about this is we’re not calling to an input field, but rather, making use of `@` or in good ol’ JavaScript `this.`.
+Woah smokies. It _is_ a lot, but remember, we're keeping everything in one file. It's bound to look a little bloated. Just like before with our `<Index />` form, we're relying on React's refs concept to fish out and select our DOM elements. We do a quick spot of validation to make sure all of our fields are complete and then defer to our `submitHandler` method on our validation to do the deed.
 
-`this` in this context (hang in there) means accessing the data context for the current item. Because we’re using an `{{#each}}` loop in our template, this translates to being the _currently looped item_. Said another way, looking at a list of our invites, `this` is like pointing to the second item and saying give me the data for this item. Confusing at first, but really cool and fun to use once you get the hang of it.
+Here, notice that we're relying heavily on `React.findDOMNode()` to pluck values out of our component. Once we have them, we toss them up the server to validate the token and create our user's account. Real quick, notice that we're separating out our password field here. Why? We'll be using it in two steps: first, we take the password value and hash it using `Accounts._hashPassword` to make it a teensy bit more secure for sending over the wire and then again, to handle the login _after_ our users account is created.
 
-Next, we set a variable `url` equal to the value of `window.location.origin + "/signup”`. What does this mean? `window.location.origin` gives us the base url of where this script is running from.
+Clever! Notice that we're just piggybacking on what our user enters into the form to log them in as well. Technically we could get this for free by using `Accounts.createUser()` on the client, so if you'd rather go that route, have at it! Let's jump up to the server and take a peek at how we're validating tokens and creating our user.
 
-We’re doing this here because we’ll be sending this URL to the server as part of our email. We want our users to be able to click a button in their email that links directly to the signup form.
+<p class="block-header">/server/methods/insert/users.js</p>
 
-Doing this ensures we’re grabbing the URL from where the request is originating. For example, if I run this on my local computer it would be `http://localhost:3000` whereas on the demo it’s `http://tmc-002-demo.meteor.com`. Neat! This is handy because it allows us to skip hardcoding URLs into our application that we could forget to change before going into production.
+```javascript
+Meteor.methods({
+  validateBetaToken( user ) {
+    check( user, {
+      email: String,
+      password: Object,
+      betaToken: String
+    });
 
-Lastly, after we double-check our action with a `confirm()` dialog, we make a call to our `sendInvite` method on the server, passing our `invitee` and `url` variables independently. Rad. Now, let’s move over to the server and take a look a how we fire off an email to our user.
+    let invite = Invites.findOne( { email: user.email, token: user.betaToken }, { fields: { "_id": 1 } } );
 
-#### Sending Invites on the Server
+    if ( invite ) {
+      let userId = Accounts.createUser( { email: user.email, password: user.password } );
 
-Strap in, this is the best part (in my eyes, at least) of the recipe. Because our invite technically already exists in the database, we’re going to make use of the `update()` method on our `Invites` collection. Let’s take a look:
+      Roles.addUsersToRoles( userId, 'tester' );
 
-<p class="block-header">/server/data/update/invites.coffee</p>
-
-```.lang-coffeescript
-Meteor.methods(
-  sendInvite: (invitee,url) ->
-    check(invitee,{id: String, email: String})
-    check(url,String)
-
-    token = Random.hexString(10)
-
-    Invites.update(invitee.id,
-      $set:
-        token: token
-        dateInvited: ( new Date() ).getTime()
-        invited: true
-        accountCreated: false
-    ,(error)->
-      if error
-        console.log error
-      else
-        # We’ll send notification to the user here.
-    )
-)
+      Invites.update( invite._id, {
+        $set: { accountCreated: true },
+        $unset: { token: "" }
+      });
+    } else {
+      throw new Meteor.Error( 'bad-match', 'Hmm, this token doesn\'t match your email. Try again?' );
+    }
+  }
+});
 ```
 
-Cool, so we’ve got out method setup and notice we’re pulling in our `invitee` and `url` variables from the client as arguments in our `sendInvite` method. Next we do the right thing and `check()` our arguments against the expected pattern. We’re using two separate `check()`’s here because we’ve passed two separate items.
+We check our user object just to make sure it contains what we're after and then we get to work. Again, we check to make sure that we can find an invitation with both the email entered _and_ the beta token being passed. If we do, we kickoff the signup process by adding a new user. Once we have them, we pass their new `userId` to `Roles.addUsersToRoles()` to add them to the `tester` group—remember, we're filtering based on this in our publications and our `App` component—and then finally update their invite to acknowledge their acceptance!
 
-Next, we create a `token` variable and set it equal to the value of the method `Random.hexString(10)`. What the heck does this do? Well, recall back at the beginning of the recipe when we ran `meteor add random`?
-
-This is where it comes into play. This function is helping us to create a completely random, 10 character hexadecimal string (letters and numbers) out of thin air. Really badass. In turn, we use this generated string as our “beta token” to uniquely identify beta testers that we’ve invited to try out the app.
-
-With this, we can now update our user with the appropriate information. Again, we’re running an `update()` method on our existing invitation, setting the `token` equal to the random value we just created, setting the `dateInvited` to the current time so we now when we asked the user to join, flagging their invite as `invited` (again, to filter out our lists), and finally setting `accountCreated` to `false`.
-
-Why `false`? This is an added bonus for administrators so we can quickly identify which beta testers have actually opened their invite and created an account. Totally optional but very helpful if you intend to track metrics or other startupy stuff in your application.
-
-Now, the final part of this is that once we’ve successfully updated the user’s invitation, we need to send them a notification via email.
-
-<p class="block-header">/server/data/update/invites.coffee</p>
-
-```.lang-coffeescript
-Email.send(
-  to: invitee.email
-  from: "Urkelforce Beta Invitation <dididothat@urkelforce.com>"
-  subject: "Welcome to the Urkelforce Beta!"
-  html: Handlebars.templates['send-invite'](
-    token: token
-    url: url
-    urlWithToken: url + "/#{token}"
-  )
-)
-```
-
-The `Email.send()` method is made available by the `email` package we installed earlier using `meteor add email`. Here, we set some more obvious items like our to, from, and subject lines, and finally, set our `html` setting equal to a call to `Handlebars.templates['send-invite']` and pass some data to it. What the heck is this?
-
-Earlier, we added a package to our application called `cmather:handlebars-server`. Much like the name implies, this package gives us the ability to render Handlebars templates on the server. As of writing, the ability to render templates on the server _is not_ a part of the Meteor core (though, this is ["under consideration" for a 1.1+ release](https://trello.com/c/Lz07fBAm/7-server-side-rendering)).
-
-The first part of this `Handlebars.templates['send-invite']` is saying "find a Handlebars template called `send-invite.handlebars`," while the second part is passing an object with data to set _in_ the template.
-
-This means that for each key/value specified, we'll now be able to access those values in our template. So in the code above, `urlWithToken: url + "/#{token}"` becomes `{{urlWithToken}}` in our template. Handy! The only caveat to all of this is that our Handlebars template needs to be accessible on the server. Per [the documentation](https://github.com/cmather/meteor-handlebars-server) for `handlebars-server`:
-
-> The templates need to be accessible to the server (i.e. put them inside your `/server` directory).
-
-In our example code, we've placed our template in `/server/email/templates/send-invite.handlebars`. We won't show the contents of the template here, but it's recommended to [check out the source for the template on GitHub](https://github.com/themeteorchef/adding-a-beta-invitation-system-to-your-meteor-application/blob/master/code/server/email/templates/send-invite.handlebars).
-
-So what about the data we're passing to the template? We're passing three items: `token`, `url`, and `urlWithToken`. The `urlWithToken` variable gives us a link that we can assign to a button in our email that users can click. This button  automatically redirects them to the application, pasting their beta token into the Beta Token field on our signup page (woah!). The `token` and `url` variables give us the option to display the `/signup` url and the user's `token` separately, allowing users to paste in their beta code manually if they wish (some folks don't like clicking third-party links for security/curmudgeon reasons).
-
-Awesome! With our data in place our email is ready to go out. Or is it? We need to talk about one thing: how to handle sending email from our application. If you were to run this method right now, an email wouldn’t actually send. Instead, you would see the contents of the email logged in your terminal. Why?
-
-In order to send email, Meteor needs access to some service to actually _send_ the email on your application’s behalf. The Meteor Development Group recommend a service like [Mailgun](http://mailgun.com) for handling this.
-
-This is what we’re using in our demo, so it’s recommended here too. In order to wire this up, you’ll need to [create an account over at Mailgun](https://mailgun.com/signup). Next, you will need to set your `MAIL_URL` environment variable equal to Mailgun’s `smtp://` address with your authentication info included. In the demo I’ve set this up in `/server/admin/startup.coffee`. It looks something like this:
-
-```.lang-coffeescript
-process.env.MAIL_URL = 'smtp://postmaster%40YOURDOMAIN.mailgun.org:YOURPASSWORD@smtp.mailgun.org:587'
-```
-
-The long address after the `smtp://` part is your unique URL provided by Mailgun which acts as your “username.” Once you’ve got that in place, Meteor will know that you want to send email via your Mailgun account. Killer!
-
-With our email out the door and  (theoretically) in our user’s mailbox, our last step is to get the user back to our application and signed up!
-
-### Getting Users Signed Up
-
-For this last part, we’re going to focus on getting our users back to our application. More specifically, we’re expecting our user to come back to our application through our signup page, bringing their beta token with them. The link in their email will look something like this:
-
-```.lang-markup
-http://website.com/signup/xj31mat531
-```
-
-That last part is their token. Because we want our users to have a great experience using our application, we’re going to automate this process a bit. Recall earlier when we set up our routes? When we defined our `/signup/:token` route, we also defined a `Session` variable in our `onBeforeAction` callback function called `betaToken`, equal to the token in our URL.
-
-Now, we want to retrieve that token and set it as the value of our Beta Token field on our signup form as soon as the user visits the page (in the biz we call this [“magic”](http://media.giphy.com/media/ujUdrdpX7Ok5W/giphy.gif)). In our template, here is how our Beta Token field looks:
-
-```.lang-markup
-<input type="text" name="betaToken" class="form-control" placeholder="Beta Token" value="{{betaToken}}">
-```
-
-Notice that our value parameter is set to a template variable `{{betaToken}}`. Hop over to our controller for the `signup` template in `/client/controllers/public/signup.coffee`. There, we’ll add a template helper that will supply the value for this variable by calling to the `betaToken` `Session` variable we set in our router.
-
-<p class="block-header">/client/controllers/public/signup.coffee</p>
-
-```.lang-coffeescript
-Template.signup.helpers(
-  betaToken: ->
-    Session.get 'betaToken'
-)
-```
-
-Short, simple, sweet. Now when our user hits the `/signup` page with their token, it will automatically show up in the field. Copy and paste is for _chumps_. Alright, back to adult time.
-
-Now we need to actually handle the process of creating an account for our user. The trick, here, is that we want to make sure that the user signing up (their email address) exists in our invites list _and_ that they have a valid invite token (again, we’ve written our code so that this only exists _after_ an administrator has decided to invite a user).
-
-In order to facilitate the form submission, we’re making use of the same validation pattern we covered earlier. To save time, we’re going to focus on the code being called in the `submitHandler` function, again, what happens after the form is deemed “valid.”
-
-<p class="block-header">/client/controllers/public/signup.coffee</p>
-
-```.lang-coffeescript
-user =
-  email: $('[name="emailAddress"]').val().toLowerCase()
-  password: $('[name="password"]').val()
-  betaToken: $('[name="betaToken"]').val()
-
-Meteor.call 'validateBetaToken', user, (error)->
-  if error
-    alert error.reason
-  else
-    # What we’ll do when the method succeeds.
-```
-
-Super straightforward. First we create a `user` variable containing an object with all of the values entered into our form, passing those to a method call for `validateBetaToken` on our server. Easy peasy. You’ll notice a hint that we’ll need to do one more thing on the client before we call this thing complete. Before we do, let’s jump over to the server and look at how we’re handling our token validation.
-
-#### Token Validation on the Server
-
-Over on the server, we need to make sure that our user’s email address and beta token exist before we officially provision their account. Here’s how the method is shaping up:
-
-<p class="block-header">/server/data/read/beta-tokens.coffee</p>
-
-```.lang-coffeescript
-Meteor.methods(
-  validateBetaToken: (user)->
-    check(user,{email: String, password: String, betaToken: String})
-
-    testInvite = Invites.findOne({email: user.email, token: user.betaToken}, {fields: {"_id": 1, "email": 1, "token": 1}})
-
-    if not testInvite
-      throw new Meteor.Error "bad-match", "Hmm, this token doesn't match your email. Try again?"
-    else
-      id = Accounts.createUser(
-        email: user.email
-        password: user.password
-      )
-
-      Roles.addUsersToRoles(id, ['tester'])
-
-      Invites.update(testInvite._id,
-        $set:
-          accountCreated: true
-        $unset:
-          token: ""
-      )
-)
-```
-
-The bulk of this should look familiar, so we won’t beat around the bush. Of course, first, we `check()` our arguments like good boys and girls and then in our `findOne()` we pass the `email` and `token` the user is trying to sign up with.
-
-Next, we test in the negative against the result of our `findOne()` which is set to the variable `testInvite`. If our result is false, or, an invite cannot be found with the passed `email` and `token`, we throw an error that will be returned to the client.
-
-Conversely, if all goes well, we do three things. First, we go ahead and create an account for our user. Here, we’re making use of the `email` and `password` values the user entered on the client. Next, we’re making sure that our new user is identified as a “tester.”
-
-To do this, we’re reintroducing the alanning:roles package we saw when we were setting up routing. This time we make use of the `Roles.addUsersToRoles()` method to set the `roles` value on our user’s new account equal to `[‘tester’]`.
-
-Now, when our user logs in, our route filters will be able to tell that they’re a tester (as opposed to an admin) and direct them to the correct part of the application. _Hot diggity dog_.
-
-Lastly, we tie everything up in a bow by updating our invite to show that our user’s account has been created. We also remove their token, rendering it non-existent and useless (e.g. if their friend got smart and tried to use the token in their email their signup attempt would be denied).
-
-Okay. Phew. We are really close. There’s just _one more thing_.
-
-#### Back to the Client
-
-Alright. Last step. Seriously. Recall that before we hopped on the server, we did a little foreshadowing that we’d need to do something else on the client before we called it a day. If you’re keen you probably realized that because we created our user’s account on the server, we lose the nice UX touch of automatically logging in our user.
-
-Unfortunately, in order to make use of the alanning:roles package, we needed to run our `Accounts.createuser()` function on the server. But no worries! We can easily implement an auto-login ourselves. Let’s take a look:
-
-<p class="block-header">/client/controllers/public/signup.coffee</p>
-
-```.lang-coffeescript
-Meteor.loginWithPassword(user.email, user.password, (error)->
-  if error
-    alert error.reason
-  else
-    Router.go '/dashboard'
-)
-```
-
-In the `else` statement of our `Meteor.call ‘validateBetaToken’` method’s callback, we can run `Meteor.loginWithPassword()`, passing the email and password the user entered into the form earlier.
-
-Wait, how does that work? Well, because we’re creating the user’s account on the server _before_ we make a call to `loginWithPassword()`, we know that the user’s account already exists with an email and password identical to what they typed in. It sounds a bit loopy, but makes perfect sense if you think about it.
-
-Okay! With our user being logged in, assuming we don’t run into any errors, we cap off our code with a call to `Router.go ‘/dashboard’` which tells Iron Router to redirect to the `/dashboard` route.
+If we send off an invite to our users now, they'll be able sign up for Urkelforce using their email and password along with their beta token! Done! In case you missed it, when the user's account is created and we log them in back on the client, we also redirect them to `/dashboard`, our "top secret" feature that has VC's climbing over themselves to invest in us. 
 
 Drumroll please…
 
-Annnnnd Carl Winslow dancing. You're welcome.
+Annnnnd Carl Winslow dancing. You're welcome. We'll take our payment in $50's and $100's.
 
-![http://media.giphy.com/media/l1UWxyIhsZi8g/giphy.gif](http://media.giphy.com/media/l1UWxyIhsZi8g/giphy.gif)
+![https://media.giphy.com/media/l1UWxyIhsZi8g/giphy.gif](https://media.giphy.com/media/l1UWxyIhsZi8g/giphy.gif)
 
 Just _look at him go_. Moves.
 
 ### Wrap Up & Summary
 
-Cool, right? In this recipe, we learned how to collect emails from users on our index page and make it possible to send invites to them using unique Beta Tokens. We looked at using the Random package, rendering a server side email template, and even learned about UI helpers. Alright, now it's off to the races. [Y Combinator](https://www.ycombinator.com/) here we come!
+Cool, right? In this recipe, we learned how to collect emails from users on our index page and make it possible to send invites to them using unique Beta Tokens. We looked at using the Random package, rendering a server side email template, and took a solid look at working with reusable components in React. Alright, now it's off to the races. [Y Combinator](https://www.ycombinator.com/) here we come!

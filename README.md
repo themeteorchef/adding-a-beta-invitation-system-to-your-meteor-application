@@ -1,13 +1,15 @@
-##### The Meteor Chef
-###### \#002 - Adding a Beta Invitation System to Your Meteor Application
+#### Tutorial: Adding a Beta Invitation System to Your Meteor Application
 
-In this recipe we'll help soon-to-be startup Urkelforce add a beta invitation system to their app. We'll create a public beta signup page, an admin page for approving and reviewing invites, and add a custom "Beta Token" field to their signup page that requests a unique code that we'll send to beta testers. We'll be relying on the React interface library, learning how to build our interface with a series of reusable components.
+undefined
 
+[Read this tutorial on The Meteor Chef](https://themeteorchef.com/tutorials/adding-a-beta-invitation-system-to-your-meteor-application)  
 
-[Read on The Meteor Chef](http://themeteorchef.com/recipes/adding-a-beta-invitation-system-to-your-meteor-application)
+[Download the source (.zip)](https://github.com/themeteorchef/adding-a-beta-invitation-system-to-your-meteor-application/archive/master.zip)
 
-[Demo the Recipe](http://tmc-002-demo.meteor.com/)  
+---
 
-[Download the Source](https://github.com/themeteorchef/adding-a-beta-invitation-system-to-your-meteor-application/archive/master.zip)
+**Need help with this?** [Sign up for a Mentorship appointment](https://themeteorchef.com/mentorship?readme=adding-a-beta-invitation-system-to-your-meteor-application) and get 1-on-1 help.
 
-The code for this recipe is licensed under the [MIT License](http://opensource.org/licenses/MIT).
+---
+
+_The code for this tutorial is licensed under the [MIT License](http://opensource.org/licenses/MIT)_.
